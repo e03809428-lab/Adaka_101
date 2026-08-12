@@ -18,6 +18,7 @@ export type BouncePad = Rect & {
 
 export type Enemy =
   | (Rect & { kind: "runner"; range: number; speed: number })
+  | (Rect & { kind: "verticalRunner"; range: number; speed: number })
   | (Rect & { kind: "jumper"; interval: number })
   | (Rect & { kind: "drone"; range: number; speed: number });
 
@@ -34,7 +35,6 @@ export type Level = {
   start: Vec;
   exit: Rect;
   platforms: Rect[];
-  checkpoints?: Rect[];
   hazards?: Rect[];
   lasers?: Rect[];
   movingPlatforms?: MovingPlatform[];

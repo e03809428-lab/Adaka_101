@@ -9,7 +9,7 @@ export const defaultSave: SaveData = {
   music: 0.35,
   effects: 0.65,
   fullscreen: false,
-  keys: { left: "KeyA", right: "KeyD", jump: "Space", action: "KeyE" },
+  keys: { left: "KeyA", right: "KeyD", jump: "Space", action: "KeyW" },
 };
 
 export function loadSave(): SaveData {
@@ -18,7 +18,17 @@ export function loadSave(): SaveData {
 
   try {
     const parsed = JSON.parse(raw) as Partial<SaveData>;
-    return { ...defaultSave, ...parsed, bestTimes: parsed.bestTimes ?? {} };
+    return {
+      ...defaultSave,
+      ...parsed,
+      bestTimes: parsed.bestTimes ?? {},
+      keys: {
+        ...defaultSave.keys,
+        ...parsed.keys,
+        jump: "Space",
+        action: parsed.keys?.action === "KeyE" ? "KeyW" : parsed.keys?.action ?? "KeyW",
+      },
+    };
   } catch {
     return defaultSave;
   }

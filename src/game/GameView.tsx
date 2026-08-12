@@ -30,7 +30,6 @@ type Shot = Rect & {
 export function GameView({ level, save, onPause, onWin }: Props) {
   const keys = useRef(new Set<string>());
   const jumpHeld = useRef(false);
-  const checkpoint = useRef(level.start);
   const started = useRef(performance.now());
   const last = useRef(performance.now());
   const won = useRef(false);
@@ -41,6 +40,10 @@ export function GameView({ level, save, onPause, onWin }: Props) {
   const [shots, setShots] = useState<Shot[]>([]);
   const lastShot = useRef<Record<number, number>>({});
   const wasGrounded = useRef(false);
+
+  function pressed(...codes: string[]) {
+    return codes.some((code) => keys.current.has(code));
+  }
 
   useEffect(() => {
     startMusic(save);
@@ -79,7 +82,7 @@ export function GameView({ level, save, onPause, onWin }: Props) {
   function step(dt: number, now: number) {
     const b = body.current;
     const isDashing = now < b.dashUntil;
-    const isSliding = !b.ground && b.touchingWall !== 0 && keys.current.has(save.keys.action);
+    const isSliding = !b.ground && b.touchingWall !== 0 && pressed("KeyW", "ArrowUp");
 
     if (keys.current.has("ShiftLeft") && now >= b.dashReadyAt && !isDashing) {
       b.dashUntil = now + 180;
@@ -92,11 +95,11 @@ export function GameView({ level, save, onPause, onWin }: Props) {
     if (isDashing) {
       b.vel.x = b.facing * 920;
     } else {
-      if (keys.current.has(save.keys.left)) {
+      if (pressed(save.keys.left, "ArrowLeft")) {
         b.vel.x = -330;
         b.facing = -1;
       }
-      if (keys.current.has(save.keys.right)) {
+      if (pressed(save.keys.right, "ArrowRight")) {
         b.vel.x = 330;
         b.facing = 1;
       }
@@ -124,25 +127,14 @@ export function GameView({ level, save, onPause, onWin }: Props) {
 
     const moving = activeMovingPlatforms(now);
     const crumble = (level.crumblePlatforms ?? []).filter((item) => !broken.includes(item.id));
-    const solids = [...level.platforms, ...moving, ...crumble];
+    const solids = [...level.platforms, ...moving, ...crumble, ...(level.bouncePads ?? [])];
     move(b, { x: b.vel.x * dt, y: 0 }, solids);
     move(b, { x: 0, y: b.vel.y * dt }, solids);
+    bounceIfStandingOnPad(b);
 
     for (const platform of crumble) {
       if (hit(playerBox(b.pos), platform)) {
         window.setTimeout(() => setBroken((current) => [...new Set([...current, platform.id])]), platform.delay);
-      }
-    }
-    for (const pad of level.bouncePads ?? []) {
-      if (hit(playerBox(b.pos), pad)) {
-        b.vel = pad.power;
-        playSound("jump", save);
-      }
-    }
-    for (const point of level.checkpoints ?? []) {
-      if (hit(playerBox(b.pos), point) && checkpoint.current.x !== point.x) {
-        checkpoint.current = { x: point.x, y: point.y - 32 };
-        playSound("checkpoint", save);
       }
     }
     if (touchingDanger(now) || enemyRects(now).some((enemy) => hit(playerBox(b.pos), enemy)) || b.pos.y > 820) respawn();
@@ -167,6 +159,7 @@ export function GameView({ level, save, onPause, onWin }: Props) {
 
     for (const solid of solids) {
       if (!hit(playerBox(b.pos), solid)) continue;
+      const bouncePad = (level.bouncePads ?? []).find((pad) => pad === solid);
       if (delta.y > 0) {
         b.pos.y = solid.y - 32;
         b.vel.y = 0;
@@ -181,12 +174,33 @@ export function GameView({ level, save, onPause, onWin }: Props) {
         b.pos.x = solid.x + solid.w;
         b.touchingWall = -1;
       }
+      if (bouncePad) bounceFromPad(b, bouncePad);
     }
+  }
+
+  function bounceIfStandingOnPad(b: Body) {
+    const box = playerBox(b.pos);
+    const pad = (level.bouncePads ?? []).find((item) => {
+      const feet = box.y + box.h;
+      const overlapsX = box.x < item.x + item.w && box.x + box.w > item.x;
+      return overlapsX && Math.abs(feet - item.y) <= 2;
+    });
+
+    if (!pad) return;
+    bounceFromPad(b, pad);
+  }
+
+  function bounceFromPad(b: Body, pad: Rect & { power: Vec }) {
+    b.vel = {
+      ...pad.power,
+      y: -880,
+    };
+    b.ground = false;
   }
 
   function respawn() {
     playSound("death", save);
-    body.current = createBody(checkpoint.current);
+    body.current = createBody(level.start);
   }
 
   function touchingDanger(now: number) {
@@ -214,6 +228,10 @@ export function GameView({ level, save, onPause, onWin }: Props) {
       if (enemy.kind === "runner") {
         const offset = Math.sin(now / 1000 * (enemy.speed / 45)) * enemy.range;
         return { ...enemy, x: enemy.x + offset };
+      }
+      if (enemy.kind === "verticalRunner") {
+        const offset = Math.sin(now / 1000 * (enemy.speed / 45)) * enemy.range;
+        return { ...enemy, y: enemy.y + offset };
       }
       if (enemy.kind === "jumper") {
         const phase = (now % enemy.interval) / enemy.interval;
@@ -303,7 +321,7 @@ export function GameView({ level, save, onPause, onWin }: Props) {
     });
   }
 
-  const playerSliding = !body.current.ground && body.current.touchingWall !== 0 && keys.current.has(save.keys.action);
+  const playerSliding = !body.current.ground && body.current.touchingWall !== 0 && pressed("KeyW", "ArrowUp");
   const dashReady = performance.now() >= body.current.dashReadyAt;
 
   return (
@@ -311,7 +329,7 @@ export function GameView({ level, save, onPause, onWin }: Props) {
       <div className="game-ui">
         <strong>{(tick / 1000).toFixed(1)} сек</strong>
         <span>Dash: {dashReady ? "готов" : "заряд"}</span>
-        <button type="button" onClick={onPause}>↻</button>
+        <button type="button" onClick={onPause}>Пауза</button>
       </div>
       <section className="game-viewport">
         <div className="world" style={{ transform: `scale(0.5) translateX(${-cameraX}px)` }}>
@@ -319,7 +337,6 @@ export function GameView({ level, save, onPause, onWin }: Props) {
           {activeMovingPlatforms(performance.now()).map((p, i) => <div className="platform platform--moving" key={i} style={rect(p)} />)}
           {(level.crumblePlatforms ?? []).filter((p) => !broken.includes(p.id)).map((p) => <div className="platform platform--crumble" key={p.id} style={rect(p)} />)}
           {level.bouncePads?.map((p, i) => <div className="bounce-pad" key={i} style={rect(p)} />)}
-          {level.checkpoints?.map((p, i) => <div className="checkpoint" key={i} style={rect(p)} />)}
           {level.hazards?.map((h, i) => <div className="hazard" key={i} style={rect(h)} />)}
           {level.lasers?.map((h, i) => <div className="laser" key={i} style={rect(h)} />)}
           {enemyRects(performance.now()).map((enemy, i) => <div className="enemy" key={i} style={rect(enemy)} />)}

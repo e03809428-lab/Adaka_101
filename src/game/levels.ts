@@ -17,10 +17,12 @@ export const levels: Level[] = [
       { x: 1230, y: 420, w: 180, h: 26 },
       { x: 1480, y: 270, w: 180, h: 26 },
     ],
-    checkpoints: [{ x: 900, y: 490, w: 40, h: 60 }],
     lasers: [{ x: 350, y: 420, w: 150, h: 18 }, { x: 590, y: 335, w: 150, h: 18 }],
     hazards: [{ x: 830, y: 632, w: 120, h: 18 }],
-    enemies: [{ kind: "runner", x: 1040, y: 528, w: 32, h: 32, range: 130, speed: 90 }],
+    enemies: [
+      { kind: "runner", x: 1040, y: 528, w: 32, h: 32, range: 130, speed: 90 },
+      { kind: "verticalRunner", x: 1320, y: 350, w: 30, h: 30, range: 130, speed: 90 },
+    ],
   },
   {
     id: 2,
@@ -35,10 +37,12 @@ export const levels: Level[] = [
       { x: 1450, y: 650, w: 470, h: 80 },
       { x: 1300, y: 360, w: 34, h: 290 },
     ],
-    checkpoints: [{ x: 820, y: 520, w: 40, h: 60 }],
     crumblePlatforms: [{ id: "c1", x: 1110, y: 510, w: 150, h: 26, delay: 1800 }],
     hazards: [{ x: 300, y: 680, w: 140, h: 26 }, { x: 650, y: 680, w: 110, h: 26 }, { x: 960, y: 680, w: 120, h: 26 }],
-    enemies: [{ kind: "jumper", x: 820, y: 528, w: 32, h: 32, interval: 1800 }],
+    enemies: [
+      { kind: "jumper", x: 820, y: 528, w: 32, h: 32, interval: 1800 },
+      { kind: "runner", x: 1460, y: 618, w: 32, h: 32, range: 120, speed: 80 },
+    ],
   },
   {
     id: 3,
@@ -55,7 +59,11 @@ export const levels: Level[] = [
     ],
     lasers: [{ x: 545, y: 545, w: 70, h: 18 }, { x: 825, y: 475, w: 70, h: 18 }, { x: 1105, y: 405, w: 70, h: 18 }],
     movingPlatforms: [{ x: 1380, y: 520, w: 130, h: 24, axis: "y", distance: 150, speed: 120 }],
-    enemies: [{ kind: "drone", x: 980, y: 300, w: 30, h: 30, range: 360, speed: 70 }],
+    enemies: [
+      { kind: "drone", x: 980, y: 300, w: 30, h: 30, range: 360, speed: 70 },
+      { kind: "runner", x: 650, y: 468, w: 32, h: 32, range: 120, speed: 75 },
+      { kind: "jumper", x: 1240, y: 328, w: 32, h: 32, interval: 1600 },
+    ],
     turrets: [{ kind: "single", x: 1220, y: 320, w: 34, h: 34, cooldown: 1800, projectile: "normal", direction: { x: -1, y: 0 } }],
   },
   {
@@ -72,11 +80,14 @@ export const levels: Level[] = [
       { x: 1590, y: 330, w: 180, h: 26 },
     ],
     bouncePads: [
-      { x: 405, y: 580, w: 60, h: 30, power: { x: 320, y: -850 } },
-      { x: 735, y: 470, w: 60, h: 30, power: { x: 360, y: -850 } },
-      { x: 1045, y: 360, w: 60, h: 30, power: { x: 420, y: -820 } },
+      { x: 405, y: 580, w: 60, h: 30, power: { x: 320, y: -1050 } },
+      { x: 735, y: 470, w: 60, h: 30, power: { x: 360, y: -1050 } },
+      { x: 1045, y: 360, w: 60, h: 30, power: { x: 420, y: -1020 } },
     ],
     hazards: [{ x: 520, y: 632, w: 130, h: 18 }, { x: 835, y: 632, w: 130, h: 18 }],
+    enemies: [
+      { kind: "drone", x: 1120, y: 250, w: 30, h: 30, range: 330, speed: 75 },
+    ],
     turrets: [{ kind: "burst", x: 1260, y: 250, w: 34, h: 34, cooldown: 2300, projectile: "fast", direction: { x: -1, y: 0 } }],
   },
   {
@@ -96,7 +107,11 @@ export const levels: Level[] = [
     lasers: [{ x: 430, y: 530, w: 70, h: 18 }, { x: 900, y: 455, w: 70, h: 18 }],
     movingPlatforms: [{ x: 1340, y: 470, w: 120, h: 24, axis: "x", distance: 160, speed: 180 }],
     hazards: [{ x: 1120, y: 632, w: 110, h: 18 }],
-    enemies: [{ kind: "drone", x: 700, y: 320, w: 30, h: 30, range: 420, speed: 90 }],
+    enemies: [
+      { kind: "drone", x: 700, y: 320, w: 30, h: 30, range: 420, speed: 90 },
+      { kind: "drone", x: 1260, y: 390, w: 30, h: 30, range: 1200, speed: 12 },
+      { kind: "runner", x: 1530, y: 618, w: 32, h: 32, range: 160, speed: 100 },
+    ],
     turrets: [
       { kind: "ceiling", x: 1040, y: 250, w: 34, h: 34, cooldown: 1500, projectile: "slow", direction: { x: 0, y: 1 } },
       { kind: "single", x: 1510, y: 590, w: 34, h: 34, cooldown: 1900, projectile: "homing", direction: { x: -1, y: 0 } },
