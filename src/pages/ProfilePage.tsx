@@ -52,11 +52,12 @@ export function ProfilePage() {
   return (
     <main className="shell">
       <section className="panel profile-panel">
-        <Link className="menu-alt-game" href="/">На главную</Link>
+        <Link className="menu-alt-game" href="/game">В меню 1 игры</Link>
         <h1>Профиль</h1>
         {avatarUrl && <img className="profile-avatar" src={avatarUrl} alt="" />}
         <p>{name ?? "Игрок"}</p>
         <p className="profile-email">{user.email}</p>
+        <Link className="button-link secondary-link" href="/feedback">Оставить отзыв</Link>
         <button onClick={signOut}>Выйти</button>
       </section>
     </main>

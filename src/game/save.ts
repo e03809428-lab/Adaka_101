@@ -5,6 +5,7 @@ const key = "ten-seconds-ago-save";
 export const defaultSave: SaveData = {
   completed: [],
   bestTimes: {},
+  language: "ru",
   volume: 0.7,
   music: 0.35,
   effects: 0.65,

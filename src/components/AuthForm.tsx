@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { Link } from "wouter";
 import { supabase } from "../lib/supabase";
 
 export function AuthForm() {
@@ -13,7 +14,7 @@ export function AuthForm() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/profile` },
+      options: { emailRedirectTo: `${window.location.origin}/game` },
     });
 
     setIsLoading(false);
@@ -26,7 +27,7 @@ export function AuthForm() {
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/profile` },
+      options: { redirectTo: `${window.location.origin}/game` },
     });
 
     if (error) {
@@ -37,10 +38,12 @@ export function AuthForm() {
 
   return (
     <section className="panel auth-panel">
+      <Link className="menu-alt-game" href="/game">В меню 1 игры</Link>
       <h1>Вход</h1>
       <button className="google-button" disabled={isLoading} onClick={signInWithGoogle}>
-        Войти через Google
+        {isLoading ? "Открываем Google..." : "Войти через Google"}
       </button>
+      <p className="auth-hint">После входа Google вернет тебя в меню 1 игры.</p>
       <form className="auth-form" onSubmit={signInWithEmail}>
         <label>
           <span>Email</span>

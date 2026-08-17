@@ -10,12 +10,12 @@ let ctx: AudioContext | null = null;
 let musicTimer = 0;
 let menuMusicTimer = 0;
 let forestTimer = 0;
-let forestAmbience:
-  | { wind: AudioBufferSourceNode; windGain: GainNode; hum: OscillatorNode; humGain: GainNode }
-  | null = null;
+let forestAmbience: { insects: AudioBufferSourceNode; insectsGain: GainNode } | null = null;
 let slide: { osc: OscillatorNode; gain: GainNode } | null = null;
 let menuMusicMood: "normal" | "calm" = "normal";
 let menuMusicIntensity = 1;
+let loseSoundTimers: number[] = [];
+let loseSoundInterval = 0;
 
 function audio() {
   ctx ??= new AudioContext();
@@ -128,7 +128,7 @@ export function startMusic(save: SaveData) {
 export function stopMusic() {
   if (musicTimer) window.clearInterval(musicTimer);
   musicTimer = 0;
-  setSlideSound(false, { volume: 1, music: 0, effects: 0, completed: [], bestTimes: {}, fullscreen: false, keys: { left: "KeyA", right: "KeyD", jump: "Space", action: "KeyW" } });
+  setSlideSound(false, { volume: 1, music: 0, effects: 0, language: "ru", completed: [], bestTimes: {}, fullscreen: false, keys: { left: "KeyA", right: "KeyD", jump: "Space", action: "KeyW" } });
 }
 
 export function startMenuMusic(save: SaveData) {
@@ -202,17 +202,129 @@ function createNoiseBuffer(actx: AudioContext) {
   return buffer;
 }
 
-function birdCall(save: SaveData) {
+function leafRustle(save: SaveData) {
   const v = volumes(save).sfx;
   if (v <= 0) return;
 
   const actx = audio();
+  const source = actx.createBufferSource();
+  const filter = actx.createBiquadFilter();
+  const gain = actx.createGain();
+  const pan = actx.createStereoPanner();
+  source.buffer = createNoiseBuffer(actx);
+  filter.type = "bandpass";
+  filter.frequency.value = 700 + Math.random() * 900;
+  filter.Q.value = 0.7;
+  gain.gain.setValueAtTime(0.0001, actx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.032 * v, actx.currentTime + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.5 + Math.random() * 0.35);
+  pan.pan.value = Math.random() * 1.6 - 0.8;
+  source.connect(filter).connect(gain).connect(pan).connect(actx.destination);
+  source.start();
+  source.stop(actx.currentTime + 0.9);
+}
+
+function twigSnap(save: SaveData) {
+  const v = volumes(save).sfx;
+  if (v <= 0) return;
+
   const pan = Math.random() * 1.6 - 0.8;
-  const base = 1200 + Math.random() * 900;
-  tone(base, 0.055, 0.035 * v, "sine", pan);
-  window.setTimeout(() => tone(base * 1.25, 0.05, 0.028 * v, "sine", pan), 85);
-  window.setTimeout(() => tone(base * 0.92, 0.07, 0.024 * v, "triangle", pan), 165);
+  toneWithFilter(130 + Math.random() * 80, 0.055, 0.07 * v, "square", pan, 0.45);
+  window.setTimeout(() => toneWithFilter(240 + Math.random() * 120, 0.035, 0.045 * v, "triangle", pan, 0.2), 45);
+}
+
+function distantForestCall(save: SaveData) {
+  const v = volumes(save).sfx;
+  if (v <= 0) return;
+
+  const pan = Math.random() * 1.2 - 0.6;
+  toneWithFilter(180 + Math.random() * 50, 0.42, 0.035 * v, "sine", pan, 0.15);
+  window.setTimeout(() => toneWithFilter(140 + Math.random() * 40, 0.55, 0.024 * v, "triangle", pan * 0.7, 0.1), 260);
+}
+
+function nightInsectChirp(save: SaveData) {
+  const v = volumes(save).sfx;
+  if (v <= 0) return;
+
+  const pan = Math.random() * 1.8 - 0.9;
+  const base = 2600 + Math.random() * 900;
+  tone(base, 0.025, 0.024 * v, "square", pan);
+  window.setTimeout(() => tone(base * 1.04, 0.022, 0.02 * v, "square", pan), 70);
+  if (Math.random() > 0.45) window.setTimeout(() => tone(base * 0.96, 0.022, 0.018 * v, "square", pan), 140);
+}
+
+function hollowWoodKnock(save: SaveData) {
+  const v = volumes(save).sfx;
+  if (v <= 0) return;
+
+  const pan = Math.random() * 1.4 - 0.7;
+  toneWithFilter(95 + Math.random() * 35, 0.08, 0.055 * v, "triangle", pan, 0.35);
+  window.setTimeout(() => toneWithFilter(70 + Math.random() * 20, 0.12, 0.034 * v, "sine", pan, 0.2), 95);
+}
+
+function heavyStep(save: SaveData, pan: number) {
+  const v = volumes(save).sfx;
+  if (v <= 0) return;
+
+  toneWithFilter(48 + Math.random() * 12, 0.16, 0.12 * v, "sine", pan, 0.25);
+  window.setTimeout(() => toneWithFilter(92 + Math.random() * 20, 0.08, 0.05 * v, "triangle", pan, 0.18), 45);
+  leafRustle(save);
+}
+
+function demonNotice(save: SaveData) {
+  const v = volumes(save).sfx;
+  if (v <= 0) return;
+
+  toneWithFilter(120, 0.42, 0.12 * v, "sawtooth", -0.35, 0.9);
+  toneWithFilter(180, 0.42, 0.1 * v, "square", 0.35, 0.9);
+  window.setTimeout(() => toneWithFilter(65, 0.65, 0.14 * v, "sine", 0, 0.35), 120);
+}
+
+function demonRush(save: SaveData) {
+  const v = volumes(save).sfx;
+  if (v <= 0) return;
+
+  for (let i = 0; i < 8; i += 1) {
+    const delay = i * 95;
+    const pan = i % 2 === 0 ? -0.45 : 0.45;
+    const timer = window.setTimeout(() => {
+      toneWithFilter(90 + i * 18, 0.1, 0.08 * v, "sawtooth", pan, 0.8);
+      toneWithFilter(42 + i * 4, 0.18, 0.09 * v, "sine", 0, 0.25);
+    }, delay);
+    loseSoundTimers.push(timer);
+  }
+}
+
+export function startLoseAnimationSounds(save: SaveData) {
+  stopLoseAnimationSounds();
+  const actx = audio();
+  let step = 0;
+
+  loseSoundInterval = window.setInterval(() => {
+    heavyStep(save, step % 2 === 0 ? -0.42 : 0.42);
+    step += 1;
+  }, 260);
+
+  loseSoundTimers.push(
+    window.setTimeout(() => {
+      if (loseSoundInterval) window.clearInterval(loseSoundInterval);
+      loseSoundInterval = 0;
+      leafRustle(save);
+      hollowWoodKnock(save);
+    }, 4800),
+    window.setTimeout(() => demonNotice(save), 7550),
+    window.setTimeout(() => demonRush(save), 8350),
+    window.setTimeout(() => playSound("death", save), 9050),
+  );
+
   void actx.resume();
+}
+
+export function stopLoseAnimationSounds() {
+  if (loseSoundInterval) window.clearInterval(loseSoundInterval);
+  loseSoundInterval = 0;
+  loseSoundTimers.forEach((timer) => window.clearTimeout(timer));
+  loseSoundTimers = [];
 }
 
 export function startNightForestAmbience(save: SaveData) {
@@ -220,40 +332,34 @@ export function startNightForestAmbience(save: SaveData) {
   const v = volumes(save);
 
   if (!forestAmbience) {
-    const wind = actx.createBufferSource();
-    const windFilter = actx.createBiquadFilter();
-    const windGain = actx.createGain();
-    const hum = actx.createOscillator();
-    const humFilter = actx.createBiquadFilter();
-    const humGain = actx.createGain();
+    const insects = actx.createBufferSource();
+    const insectsFilter = actx.createBiquadFilter();
+    const insectsGain = actx.createGain();
 
-    wind.buffer = createNoiseBuffer(actx);
-    wind.loop = true;
-    windFilter.type = "lowpass";
-    windFilter.frequency.value = 420;
-    windGain.gain.value = 0.0001;
+    insects.buffer = createNoiseBuffer(actx);
+    insects.loop = true;
+    insectsFilter.type = "bandpass";
+    insectsFilter.frequency.value = 3200;
+    insectsFilter.Q.value = 0.9;
+    insectsGain.gain.value = 0.0001;
 
-    hum.type = "sine";
-    hum.frequency.value = 58;
-    humFilter.type = "lowpass";
-    humFilter.frequency.value = 140;
-    humGain.gain.value = 0.0001;
-
-    wind.connect(windFilter).connect(windGain).connect(actx.destination);
-    hum.connect(humFilter).connect(humGain).connect(actx.destination);
-    wind.start();
-    hum.start();
-    forestAmbience = { wind, windGain, hum, humGain };
+    insects.connect(insectsFilter).connect(insectsGain).connect(actx.destination);
+    insects.start();
+    forestAmbience = { insects, insectsGain };
   }
 
-  forestAmbience.windGain.gain.setTargetAtTime(0.028 * v.music, actx.currentTime, 0.6);
-  forestAmbience.humGain.gain.setTargetAtTime(0.018 * v.music, actx.currentTime, 0.8);
+  forestAmbience.insectsGain.gain.setTargetAtTime(0.012 * v.music, actx.currentTime, 0.6);
 
   if (!forestTimer) {
-    birdCall(save);
+    leafRustle(save);
     forestTimer = window.setInterval(() => {
-      if (Math.random() > 0.35) birdCall(save);
-    }, 3400);
+      const roll = Math.random();
+      if (roll > 0.2) leafRustle(save);
+      if (roll < 0.36) nightInsectChirp(save);
+      if (roll > 0.58) twigSnap(save);
+      if (roll < 0.12) hollowWoodKnock(save);
+      if (roll > 0.9) distantForestCall(save);
+    }, 2600);
   }
   void actx.resume();
 }
@@ -264,6 +370,5 @@ export function stopNightForestAmbience() {
 
   if (!forestAmbience || !ctx) return;
   const actx = ctx;
-  forestAmbience.windGain.gain.setTargetAtTime(0.0001, actx.currentTime, 0.25);
-  forestAmbience.humGain.gain.setTargetAtTime(0.0001, actx.currentTime, 0.25);
+  forestAmbience.insectsGain.gain.setTargetAtTime(0.0001, actx.currentTime, 0.25);
 }

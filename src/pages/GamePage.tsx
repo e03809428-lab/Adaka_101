@@ -7,11 +7,12 @@ import { loadSave, storeSave } from "../game/save";
 import type { SaveData } from "../game/types";
 import "../game/game.css";
 
-type Screen = "menu" | "levels" | "settings" | "about" | "play" | "pause" | "win";
+type Screen = "menu" | "levels" | "settings" | "play" | "pause" | "win";
 
 export function GamePage() {
   const [save, setSave] = useState<SaveData>(() => loadSave());
-  const [screen, setScreen] = useState<Screen>("levels");
+  const [screen, setScreen] = useState<Screen>("menu");
+  const [levelsBackScreen, setLevelsBackScreen] = useState<Screen>("menu");
   const [levelId, setLevelId] = useState(1);
   const [result, setResult] = useState({ time: 0 });
   const level = levels.find((item) => item.id === levelId) ?? levels[0];
@@ -38,10 +39,9 @@ export function GamePage() {
   return (
     <main className="shell">
       <section className="panel">
-        {screen === "menu" && <Menu onOpen={setScreen} />}
-        {screen === "levels" && <LevelSelect save={save} onBack={() => setScreen("menu")} onPlay={(id) => { setLevelId(id); setScreen("play"); }} />}
-        {screen === "settings" && <Settings save={save} setSave={setSave} onBack={() => setScreen("menu")} />}
-        {screen === "about" && <About onBack={() => setScreen("menu")} />}
+        {screen === "menu" && <Menu onOpenLevels={() => { setLevelsBackScreen("menu"); setScreen("levels"); }} />}
+        {screen === "levels" && <LevelSelect save={save} onBack={() => setScreen(levelsBackScreen)} onPlay={(id) => { setLevelId(id); setScreen("play"); }} />}
+        {screen === "settings" && <Settings save={save} setSave={setSave} onBack={() => setScreen("pause")} />}
         {screen === "pause" && <Pause onOpen={setScreen} onRestart={() => setScreen("play")} />}
         {screen === "win" && <Win result={result} next={() => { setLevelId(Math.min(levelId + 1, levels.length)); setScreen("play"); }} replay={() => setScreen("play")} />}
       </section>
@@ -49,20 +49,21 @@ export function GamePage() {
   );
 }
 
-function Menu({ onOpen }: { onOpen: (screen: Screen) => void }) {
+function Menu({ onOpenLevels }: { onOpenLevels: () => void }) {
   const save = loadSave();
-  const open = (screen: Screen) => {
+  const openLevels = () => {
     playSound("click", save);
-    onOpen(screen);
+    onOpenLevels();
   };
   return (
     <>
-      <Link className="menu-alt-game" href="/game-2">Другая игра</Link>
       <h1>Игра Егора</h1>
       <p>Минималистичный паркур-платформер про wall jump, dash и скорость.</p>
-      <button onClick={() => open("levels")}>Играть</button>
-      <button onClick={() => open("settings")}>Настройки</button>
-      <button onClick={() => open("about")}>Об игре</button>
+      <button onClick={openLevels}>Играть</button>
+      <Link className="button-link secondary-link" href="/game-2">Вторая игра</Link>
+      <Link className="button-link secondary-link" href="/auth">Войти</Link>
+      <Link className="button-link secondary-link" href="/profile">Профиль</Link>
+      <Link className="button-link secondary-link" href="/feedback">Оставить отзыв</Link>
     </>
   );
 }
@@ -101,12 +102,17 @@ function Settings({ save, setSave, onBack }: { save: SaveData; setSave: (save: S
   );
 }
 
-function About({ onBack }: { onBack: () => void }) {
-  return <><h2>Об игре</h2><p>Паркур-платформер: карабкайся по стенам, делай dash и избегай ловушек.</p><button onClick={onBack}>Назад</button></>;
-}
-
 function Pause({ onOpen, onRestart }: { onOpen: (screen: Screen) => void; onRestart: () => void }) {
-  return <><h2>Пауза</h2><button onClick={onRestart}>Продолжить</button><button onClick={onRestart}>Перезапуск уровня</button><button onClick={() => onOpen("settings")}>Настройки</button><button onClick={() => onOpen("menu")}>Главное меню</button></>;
+  return (
+    <>
+      <h2>Пауза</h2>
+      <button onClick={onRestart}>Продолжить</button>
+      <button onClick={onRestart}>Перезапуск уровня</button>
+      <button onClick={() => onOpen("settings")}>Настройки</button>
+      <Link className="button-link secondary-link" href="/feedback">Оставить отзыв</Link>
+      <button onClick={() => onOpen("menu")}>Главное меню</button>
+    </>
+  );
 }
 
 function Win({ result, next, replay }: { result: { time: number }; next: () => void; replay: () => void }) {
