@@ -330,9 +330,25 @@ export function NightForestScene({ onBack, save, setSave, night }: Props) {
     window.dispatchEvent(new KeyboardEvent("keydown", { code, key }));
   };
 
+  const pressMobileGameKey = (
+    event: { preventDefault: () => void; stopPropagation: () => void },
+    code: string,
+    key = "",
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    pressGameKey(code, key);
+  };
+
+  const closeMobileManaRitual = (event: { preventDefault: () => void; stopPropagation: () => void }) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeManaRitual();
+  };
+
   const handleTouchStart = (event: TouchEvent<HTMLElement>) => {
     const target = event.target instanceof HTMLElement ? event.target : null;
-    if (target?.closest(".mobile-controls")) return;
+    if (target?.closest(".forest-mobile-controls") || target?.closest(".mana-ritual-controls")) return;
 
     const touch = event.touches[0];
     touchStartX.current = touch.clientX;
@@ -341,7 +357,7 @@ export function NightForestScene({ onBack, save, setSave, night }: Props) {
 
   const handleTouchEnd = (event: TouchEvent<HTMLElement>) => {
     const target = event.target instanceof HTMLElement ? event.target : null;
-    if (target?.closest(".mobile-controls")) return;
+    if (target?.closest(".forest-mobile-controls") || target?.closest(".mana-ritual-controls")) return;
 
     const touch = event.changedTouches[0];
     const deltaX = touch.clientX - touchStartX.current;
@@ -781,9 +797,18 @@ export function NightForestScene({ onBack, save, setSave, night }: Props) {
         </div>
       )}
       {manaRitualPhase !== "closed" && (
-        <div className={`mana-ritual mana-ritual--${manaRitualPhase}`} aria-hidden="true">
+        <div className={`mana-ritual mana-ritual--${manaRitualPhase}`}>
           {isManaRitualOpen && (
             <div className="mana-ritual__content">
+              <button
+                type="button"
+                className="mana-ritual__close"
+                aria-label="Выйти из накопления маны"
+                onTouchStart={closeMobileManaRitual}
+                onMouseDown={closeMobileManaRitual}
+              >
+                <span aria-hidden="true" />
+              </button>
               <div className="mana-ritual__mana">
                 <span>{manaRitualKind === "external" ? "Внешняя мана" : "Стихийная мана"}</span>
                 <strong>{manaRitualKind === "external" ? `${externalMana}/${maxExternalMana}` : `${playerMana}/${maxPlayerMana}`}</strong>
@@ -797,7 +822,28 @@ export function NightForestScene({ onBack, save, setSave, night }: Props) {
                   />
                 ))}
                 <span className="mana-ritual__arrow" ref={manaArrowRef} />
-                <span className="mana-ritual__inner">{manaRitualLetter}</span>
+                <span className={`mana-ritual__inner mana-ritual__inner--${manaRitualLetter.toLowerCase()}`}>
+                  <span>{manaRitualLetter}</span>
+                  <span className="mana-ritual__direction-icon" aria-hidden="true" />
+                </span>
+              </div>
+              <div className="mana-ritual-controls" aria-label="Управление ритуалом">
+                <div className="mana-ritual-controls__side">
+                  <button type="button" className="mana-ritual-control mana-ritual-control--up" aria-label="Вверх" onTouchStart={(event) => pressMobileGameKey(event, "KeyW", "w")} onMouseDown={(event) => pressMobileGameKey(event, "KeyW", "w")}>
+                    <span className="mana-ritual-control__icon" aria-hidden="true" />
+                  </button>
+                  <button type="button" className="mana-ritual-control mana-ritual-control--down" aria-label="Вниз" onTouchStart={(event) => pressMobileGameKey(event, "KeyS", "s")} onMouseDown={(event) => pressMobileGameKey(event, "KeyS", "s")}>
+                    <span className="mana-ritual-control__icon" aria-hidden="true" />
+                  </button>
+                </div>
+                <div className="mana-ritual-controls__side">
+                  <button type="button" className="mana-ritual-control mana-ritual-control--left" aria-label="Влево" onTouchStart={(event) => pressMobileGameKey(event, "KeyA", "a")} onMouseDown={(event) => pressMobileGameKey(event, "KeyA", "a")}>
+                    <span className="mana-ritual-control__icon" aria-hidden="true" />
+                  </button>
+                  <button type="button" className="mana-ritual-control mana-ritual-control--right" aria-label="Вправо" onTouchStart={(event) => pressMobileGameKey(event, "KeyD", "d")} onMouseDown={(event) => pressMobileGameKey(event, "KeyD", "d")}>
+                    <span className="mana-ritual-control__icon" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -847,12 +893,22 @@ export function NightForestScene({ onBack, save, setSave, night }: Props) {
           </span>
         </div>
       </div>
-      <div className="mobile-controls" aria-label="Мобильное управление">
-        <button type="button" className="mobile-control mobile-control--fire" onClick={() => pressGameKey("KeyJ", "j")}>J</button>
-        <button type="button" className="mobile-control mobile-control--ice" onClick={() => pressGameKey("KeyK", "k")}>K</button>
-        <button type="button" className="mobile-control mobile-control--mana" onClick={() => pressGameKey("KeyE", "e")}>E</button>
-        <button type="button" className="mobile-control mobile-control--external" onClick={() => pressGameKey("KeyQ", "q")}>Q</button>
-        <button type="button" className="mobile-control mobile-control--map" onClick={() => pressGameKey("KeyM", "m")}>M</button>
+      <div className="forest-mobile-controls" aria-label="Мобильное управление">
+        <button type="button" className="forest-mobile-control forest-mobile-control--fire" aria-label="Огонь" onTouchStart={(event) => pressMobileGameKey(event, "KeyJ", "j")} onMouseDown={(event) => pressMobileGameKey(event, "KeyJ", "j")}>
+          <span className="mobile-forest-icon mobile-forest-icon--fire" aria-hidden="true" />
+        </button>
+        <button type="button" className="forest-mobile-control forest-mobile-control--ice" aria-label="Лед" onTouchStart={(event) => pressMobileGameKey(event, "KeyK", "k")} onMouseDown={(event) => pressMobileGameKey(event, "KeyK", "k")}>
+          <span className="mobile-forest-icon mobile-forest-icon--ice" aria-hidden="true" />
+        </button>
+        <button type="button" className="forest-mobile-control forest-mobile-control--mana" aria-label="Стихийная мана" onTouchStart={(event) => pressMobileGameKey(event, "KeyE", "e")} onMouseDown={(event) => pressMobileGameKey(event, "KeyE", "e")}>
+          <span className="mobile-forest-icon mobile-forest-icon--mana" aria-hidden="true" />
+        </button>
+        <button type="button" className="forest-mobile-control forest-mobile-control--external" aria-label="Внешняя мана" onTouchStart={(event) => pressMobileGameKey(event, "KeyQ", "q")} onMouseDown={(event) => pressMobileGameKey(event, "KeyQ", "q")}>
+          <span className="mobile-forest-icon mobile-forest-icon--external" aria-hidden="true" />
+        </button>
+        <button type="button" className="forest-mobile-control forest-mobile-control--map" aria-label="Карта" onTouchStart={(event) => pressMobileGameKey(event, "KeyM", "m")} onMouseDown={(event) => pressMobileGameKey(event, "KeyM", "m")}>
+          <span className="mobile-forest-icon mobile-forest-icon--map" aria-hidden="true" />
+        </button>
       </div>
       <div className="view-label">
         <span>

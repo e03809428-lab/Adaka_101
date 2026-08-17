@@ -1350,6 +1350,54 @@
   font-size: 16px;
 }
 
+.mana-ritual__close {
+  position: absolute;
+  top: -8px;
+  right: -58px;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid rgba(128, 217, 255, 0.58);
+  border-radius: 8px;
+  background: rgba(5, 10, 16, 0.82);
+  color: #8bdcff;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mana-ritual__close span {
+  position: relative;
+  width: 22px;
+  height: 22px;
+}
+
+.mana-ritual__close span::before,
+.mana-ritual__close span::after {
+  position: absolute;
+  left: 9px;
+  top: 0;
+  width: 4px;
+  height: 22px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+}
+
+.mana-ritual__close span::before {
+  transform: rotate(45deg);
+}
+
+.mana-ritual__close span::after {
+  transform: rotate(-45deg);
+}
+
+.mana-ritual__close:active {
+  background: rgba(128, 217, 255, 0.18);
+}
+
 .mana-ritual__ring {
   position: relative;
   width: min(46vw, 360px);
@@ -1400,6 +1448,14 @@
   font-weight: 900;
   line-height: 1;
   text-shadow: 0 0 14px rgba(22, 119, 255, 0.72);
+}
+
+.mana-ritual__direction-icon {
+  display: none;
+}
+
+.mana-ritual-controls {
+  display: none;
 }
 
 .mana-ritual__arrow {
@@ -1775,7 +1831,7 @@
   display: none;
 }
 
-.mobile-controls {
+.forest-mobile-controls {
   position: absolute;
   right: 14px;
   bottom: 14px;
@@ -1786,7 +1842,7 @@
   pointer-events: auto;
 }
 
-.mobile-control {
+.forest-mobile-control {
   display: grid;
   place-items: center;
   width: 54px;
@@ -1794,48 +1850,325 @@
   border: 2px solid rgba(244, 229, 198, 0.2);
   border-radius: 8px;
   color: #fff8df;
-  font-size: 18px;
-  font-weight: 900;
-  line-height: 1;
-  touch-action: manipulation;
+  touch-action: none;
   background: rgba(5, 7, 8, 0.78);
+  -webkit-tap-highlight-color: transparent;
   box-shadow:
     0 10px 22px rgba(0, 0, 0, 0.52),
     inset 0 0 0 1px rgba(255, 255, 255, 0.06),
     inset 0 0 16px rgba(0, 0, 0, 0.56);
 }
 
-.mobile-control--fire {
+.forest-mobile-control:active {
+  transform: translateY(1px);
+  filter: brightness(1.18);
+}
+
+.forest-mobile-control--fire {
   border-color: rgba(255, 255, 255, 0.1);
   background: linear-gradient(135deg, rgba(14, 14, 14, 0.94), rgba(8, 8, 8, 0.9));
 }
 
-.mobile-control--ice {
+.forest-mobile-control--ice {
   border-color: rgba(255, 255, 255, 0.1);
   background: linear-gradient(135deg, rgba(14, 14, 14, 0.94), rgba(8, 8, 8, 0.9));
 }
 
-.mobile-control--mana {
+.forest-mobile-control--mana {
   border-color: rgba(176, 129, 255, 0.62);
   background: linear-gradient(135deg, rgba(55, 31, 84, 0.88), rgba(15, 9, 28, 0.9));
 }
 
-.mobile-control--external {
+.forest-mobile-control--external {
   border-color: rgba(235, 220, 255, 0.66);
   background: linear-gradient(135deg, rgba(91, 63, 130, 0.88), rgba(20, 13, 35, 0.9));
 }
 
-.mobile-control--map {
+.forest-mobile-control--map {
   border-color: rgba(210, 188, 132, 0.62);
   background: linear-gradient(135deg, rgba(62, 48, 24, 0.88), rgba(15, 12, 8, 0.9));
 }
 
+.mobile-forest-icon {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+  color: #fff8df;
+}
+
+.mobile-forest-icon::before,
+.mobile-forest-icon::after {
+  position: absolute;
+  content: "";
+}
+
+.mobile-forest-icon--fire::before {
+  left: 7px;
+  top: 3px;
+  width: 14px;
+  height: 21px;
+  border-radius: 70% 45% 70% 45%;
+  background: linear-gradient(#fff3a8, #ff7b2e 55%, #d62416);
+  box-shadow: 0 0 12px rgba(255, 88, 36, 0.72);
+  transform: rotate(35deg);
+}
+
+.mobile-forest-icon--ice::before {
+  left: 12px;
+  top: 1px;
+  width: 4px;
+  height: 26px;
+  border-radius: 999px;
+  background: #bff6ff;
+  box-shadow: -8px 8px 0 -1px #7fdcff, 8px 8px 0 -1px #7fdcff;
+}
+
+.mobile-forest-icon--ice::after {
+  left: 3px;
+  top: 12px;
+  width: 22px;
+  height: 4px;
+  border-radius: 999px;
+  background: #dffbff;
+}
+
+.mobile-forest-icon--mana::before {
+  inset: 5px;
+  border: 3px solid #c896ff;
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(190, 128, 255, 0.72), inset 0 0 10px rgba(190, 128, 255, 0.38);
+}
+
+.mobile-forest-icon--mana::after {
+  left: 12px;
+  top: 12px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #f1dcff;
+}
+
+.mobile-forest-icon--external::before {
+  left: 5px;
+  top: 5px;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #f1dcff;
+  transform: rotate(45deg);
+  box-shadow: 0 0 14px rgba(235, 220, 255, 0.64);
+}
+
+.mobile-forest-icon--external::after {
+  left: 11px;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d2a8ff;
+}
+
+.mobile-forest-icon--map::before {
+  left: 4px;
+  top: 5px;
+  width: 20px;
+  height: 18px;
+  border: 2px solid #ead28a;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, transparent 31%, #ead28a 32% 38%, transparent 39% 64%, #ead28a 65% 71%, transparent 72%),
+    linear-gradient(135deg, rgba(234, 210, 138, 0.22), rgba(92, 70, 31, 0.18));
+}
+
+.mobile-forest-icon--map::after {
+  left: 13px;
+  top: 9px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ff4b4b;
+  box-shadow: 0 0 8px rgba(255, 75, 75, 0.7);
+}
+
 @media (max-width: 780px), (pointer: coarse) {
-  .mobile-controls {
+  .forest-mobile-controls {
     display: grid;
   }
 
   .spell-buttons {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) and (orientation: landscape) {
+  .mana-ritual {
+    background: #000;
+  }
+
+  .mana-ritual__content {
+    width: 100%;
+    height: 100svh;
+    grid-template-rows: auto 1fr;
+    align-content: center;
+    gap: 14px;
+    padding: 22px 140px 16px;
+  }
+
+  .mana-ritual__close {
+    position: fixed;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+    width: 54px;
+    height: 54px;
+    border-width: 4px;
+    background: rgba(0, 0, 0, 0.42);
+  }
+
+  .mana-ritual__mana {
+    padding: 8px 14px;
+    border-color: rgba(126, 211, 255, 0.52);
+    background: rgba(5, 10, 16, 0.84);
+    color: #bdeeff;
+  }
+
+  .mana-ritual__mana strong {
+    font-size: 15px;
+  }
+
+  .mana-ritual__ring {
+    width: min(36vw, 42svh, 360px);
+    align-self: start;
+  }
+
+  .mana-ritual__inner {
+    color: #7bd3f5;
+    font-size: 0;
+  }
+
+  .mana-ritual__inner > span:first-child {
+    display: none;
+  }
+
+  .mana-ritual__direction-icon {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+
+  .mana-ritual__direction-icon::before,
+  .mana-ritual__direction-icon::after {
+    position: absolute;
+    content: "";
+  }
+
+  .mana-ritual__direction-icon::before {
+    left: 50%;
+    top: 23%;
+    width: 20%;
+    height: 42%;
+    border-radius: 2px;
+    background: currentColor;
+    transform: translateX(-50%);
+  }
+
+  .mana-ritual__direction-icon::after {
+    left: 50%;
+    top: 14%;
+    width: 34%;
+    height: 34%;
+    background: currentColor;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    transform: translateX(-50%);
+  }
+
+  .mana-ritual__inner--a {
+    transform: rotate(-90deg);
+  }
+
+  .mana-ritual__inner--s {
+    transform: rotate(180deg);
+  }
+
+  .mana-ritual__inner--d {
+    transform: rotate(90deg);
+  }
+
+  .mana-ritual-controls {
+    position: fixed;
+    inset: 0;
+    z-index: 4;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: max(18px, env(safe-area-inset-top)) max(54px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(54px, env(safe-area-inset-left));
+    pointer-events: none;
+  }
+
+  .mana-ritual-controls__side {
+    display: grid;
+    gap: 14px;
+    pointer-events: auto;
+  }
+
+  .mana-ritual-control {
+    display: grid;
+    place-items: center;
+    width: clamp(74px, 9vw, 92px);
+    height: clamp(74px, 9vw, 92px);
+    padding: 0;
+    border: 8px solid #7bd3f5;
+    background: transparent;
+    color: #7bd3f5;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mana-ritual-control:active {
+    background: rgba(123, 211, 245, 0.18);
+  }
+
+  .mana-ritual-control__icon {
+    position: relative;
+    width: 44px;
+    height: 44px;
+  }
+
+  .mana-ritual-control__icon::before,
+  .mana-ritual-control__icon::after {
+    position: absolute;
+    content: "";
+  }
+
+  .mana-ritual-control__icon::before {
+    left: 17px;
+    top: 10px;
+    width: 10px;
+    height: 28px;
+    background: currentColor;
+  }
+
+  .mana-ritual-control__icon::after {
+    left: 7px;
+    top: 3px;
+    width: 30px;
+    height: 26px;
+    background: currentColor;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  .mana-ritual-control--down .mana-ritual-control__icon {
+    transform: rotate(180deg);
+  }
+
+  .mana-ritual-control--left .mana-ritual-control__icon {
+    transform: rotate(-90deg);
+  }
+
+  .mana-ritual-control--right .mana-ritual-control__icon {
+    transform: rotate(90deg);
+  }
+
+  .mana-ritual ~ .forest-mobile-controls {
     display: none;
   }
 }
@@ -2145,7 +2478,8 @@
   letter-spacing: 0;
   line-height: 1;
   text-shadow: 0 0 10px rgba(106, 168, 255, 0.28), 0 2px 0 rgba(0, 0, 0, 0.55);
-  pointer-events: none;
+  pointer-events: auto;
+  touch-action: none;
 }
 
 .full-map-label--north {
@@ -3154,6 +3488,8 @@
   min-height: 100vh;
   overflow: hidden;
   background: linear-gradient(#121a28, #0c111b);
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 .game-screen--ending {
@@ -3343,4 +3679,341 @@
   right: 22px;
   bottom: 20px;
   color: #7f8da3;
+}
+
+.mobile-controls {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 8;
+  display: none;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.mobile-controls__move,
+.mobile-controls__actions {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 10px;
+  background: rgba(7, 12, 20, 0.18);
+}
+
+.mobile-control-button {
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 1px solid rgba(247, 251, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(24, 34, 48, 0.58);
+  color: #f7fbff;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: none;
+  pointer-events: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.mobile-control-icon {
+  position: relative;
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin: auto;
+}
+
+.mobile-control-icon::before,
+.mobile-control-icon::after {
+  position: absolute;
+  content: "";
+}
+
+.mobile-control-icon--left::before,
+.mobile-control-icon--right::before,
+.mobile-control-icon--up::before {
+  left: 5px;
+  top: 5px;
+  width: 14px;
+  height: 14px;
+  border-top: 4px solid currentColor;
+  border-left: 4px solid currentColor;
+}
+
+.mobile-control-icon--left::before {
+  transform: rotate(-45deg);
+}
+
+.mobile-control-icon--right::before {
+  transform: rotate(135deg);
+}
+
+.mobile-control-icon--up::before {
+  transform: rotate(45deg);
+}
+
+.mobile-control-icon--jump {
+  width: 30px;
+  height: 30px;
+}
+
+.mobile-control-icon--jump::before {
+  left: 12px;
+  top: 3px;
+  width: 6px;
+  height: 20px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.mobile-control-icon--jump::after {
+  left: 7px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  border-top: 5px solid currentColor;
+  border-left: 5px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.mobile-control-icon--dash {
+  width: 30px;
+  height: 22px;
+}
+
+.mobile-control-icon--dash::before {
+  left: 3px;
+  top: 9px;
+  width: 21px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: -7px 0 0 -1px currentColor;
+}
+
+.mobile-control-icon--dash::after {
+  right: 1px;
+  top: 4px;
+  width: 13px;
+  height: 13px;
+  border-top: 4px solid currentColor;
+  border-right: 4px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.mobile-control-button--jump {
+  width: 68px;
+  height: 68px;
+  border-color: rgba(128, 215, 255, 0.34);
+  background: rgba(42, 93, 156, 0.66);
+  font-size: 32px;
+}
+
+.mobile-control-button--small {
+  width: 48px;
+  height: 48px;
+  color: #d9e7ff;
+  font-size: 23px;
+}
+
+.mobile-control-button:active {
+  border-color: rgba(128, 215, 255, 0.58);
+  background: rgba(62, 140, 255, 0.78);
+}
+
+.orientation-lock {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  padding: 24px;
+  background: rgba(8, 12, 20, 0.96);
+  color: #f7fbff;
+  text-align: center;
+}
+
+.orientation-lock__phone {
+  width: 52px;
+  height: 82px;
+  border: 4px solid #80d7ff;
+  border-radius: 12px;
+  box-shadow: 0 0 24px rgba(128, 215, 255, 0.28);
+  transform: rotate(90deg);
+}
+
+.orientation-lock h2 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.orientation-lock p {
+  max-width: 260px;
+  margin: 0;
+  color: #b8c5d8;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  .mobile-controls {
+    display: flex;
+  }
+
+  .game-ui {
+    gap: 10px;
+  }
+
+  .game-ui strong {
+    min-width: 62px;
+    font-size: 18px;
+  }
+
+  .game-viewport {
+    max-height: calc(100vh - 150px);
+  }
+
+  .level-name {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) and (orientation: landscape) {
+  .game-screen {
+    min-height: 100svh;
+    padding: 32px 6px 70px;
+    place-items: start center;
+  }
+
+  .game-ui {
+    top: max(6px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .game-ui button {
+    min-height: 32px;
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+
+  .game-ui strong {
+    min-width: 56px;
+    font-size: 17px;
+  }
+
+  .game-viewport {
+    width: calc(100vw - 12px);
+    height: calc(100svh - 106px);
+    max-height: none;
+    aspect-ratio: auto;
+    border-width: 1px;
+    border-radius: 6px;
+  }
+
+  .mobile-controls {
+    bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  .mobile-controls__move,
+  .mobile-controls__actions {
+    gap: clamp(8px, 1.6vw, 14px);
+    padding: clamp(4px, 0.9vw, 8px);
+  }
+
+  .mobile-control-button {
+    width: clamp(48px, 8.2vw, 62px);
+    height: clamp(48px, 8.2vw, 62px);
+    font-size: clamp(22px, 4vw, 28px);
+  }
+
+  .mobile-control-button--jump {
+    width: clamp(62px, 10.4vw, 78px);
+    height: clamp(62px, 10.4vw, 78px);
+    font-size: clamp(28px, 4.8vw, 34px);
+  }
+
+  .mobile-control-button--small {
+    width: clamp(44px, 7vw, 54px);
+    height: clamp(44px, 7vw, 54px);
+    font-size: clamp(20px, 3.6vw, 24px);
+  }
+}
+
+@media (pointer: coarse) and (orientation: portrait) {
+  .orientation-lock {
+    display: grid;
+  }
+
+  .mobile-controls {
+    display: none;
+  }
+}
+
+@media (max-width: 430px) {
+  .mobile-controls {
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    gap: 10px;
+  }
+
+  .mobile-controls__move,
+  .mobile-controls__actions {
+    gap: 8px;
+  }
+
+  .mobile-control-button {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+
+  .mobile-control-button--jump {
+    width: 62px;
+    height: 62px;
+    font-size: 30px;
+  }
+
+  .mobile-control-button--small {
+    width: 44px;
+    height: 44px;
+    font-size: 21px;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    min-height: 100svh;
+    padding: 14px;
+  }
+
+  .panel {
+    width: min(520px, 100%);
+    max-height: calc(100svh - 28px);
+    overflow: auto;
+    padding: 20px;
+  }
+
+  .panel h1 {
+    font-size: 42px;
+  }
+
+  .panel h2 {
+    font-size: 28px;
+  }
+
+  .level-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { playSound, setSlideSound, startMusic, stopMusic } from "./audio";
+import { MobileGameControls, type ControlCode } from "./MobileGameControls";
+import { MobileOrientationNotice } from "./MobileOrientationNotice";
 import { hit, playerBox } from "./physics";
 import type { Level, Rect, SaveData, Turret, Vec } from "./types";
 
@@ -38,12 +40,45 @@ export function GameView({ level, save, onPause, onWin }: Props) {
   const [cameraX, setCameraX] = useState(0);
   const [broken, setBroken] = useState<string[]>([]);
   const [shots, setShots] = useState<Shot[]>([]);
+  const [portraitMobile, setPortraitMobile] = useState(false);
+  const [worldScale, setWorldScale] = useState(0.5);
   const lastShot = useRef<Record<number, number>>({});
   const wasGrounded = useRef(false);
 
   function pressed(...codes: string[]) {
     return codes.some((code) => keys.current.has(code));
   }
+
+  function setMobileKey(code: ControlCode, active: boolean) {
+    if (active) {
+      if (code === "ArrowLeft") keys.current.delete("ArrowRight");
+      if (code === "ArrowRight") keys.current.delete("ArrowLeft");
+      keys.current.add(code);
+      return;
+    }
+    keys.current.delete(code);
+  }
+
+  useEffect(() => {
+    const mobilePortrait = window.matchMedia("(pointer: coarse) and (orientation: portrait)");
+    const mobileLandscape = window.matchMedia("(pointer: coarse) and (orientation: landscape)");
+    const updateOrientation = () => {
+      setPortraitMobile(mobilePortrait.matches);
+      keys.current.clear();
+      jumpHeld.current = false;
+    };
+    const updateScale = () => setWorldScale(getWorldScale(mobileLandscape.matches));
+    updateOrientation();
+    updateScale();
+    mobilePortrait.addEventListener("change", updateOrientation);
+    mobileLandscape.addEventListener("change", updateScale);
+    window.addEventListener("resize", updateScale);
+    return () => {
+      mobilePortrait.removeEventListener("change", updateOrientation);
+      mobileLandscape.removeEventListener("change", updateScale);
+      window.removeEventListener("resize", updateScale);
+    };
+  }, []);
 
   useEffect(() => {
     startMusic(save);
@@ -72,7 +107,9 @@ export function GameView({ level, save, onPause, onWin }: Props) {
     function loop(now: number) {
       const dt = Math.min(32, now - last.current) / 1000;
       last.current = now;
-      step(dt, now);
+      if (!portraitMobile) {
+        step(dt, now);
+      }
       frame = requestAnimationFrame(loop);
     }
     frame = requestAnimationFrame(loop);
@@ -332,7 +369,7 @@ export function GameView({ level, save, onPause, onWin }: Props) {
         <button type="button" onClick={onPause}>Пауза</button>
       </div>
       <section className="game-viewport">
-        <div className="world" style={{ transform: `scale(0.5) translateX(${-cameraX}px)` }}>
+        <div className="world" style={{ transform: `scale(${worldScale}) translateX(${-cameraX}px)` }}>
           {level.platforms.map((p, i) => <div className="platform" key={i} style={rect(p)} />)}
           {activeMovingPlatforms(performance.now()).map((p, i) => <div className="platform platform--moving" key={i} style={rect(p)} />)}
           {(level.crumblePlatforms ?? []).filter((p) => !broken.includes(p.id)).map((p) => <div className="platform platform--crumble" key={p.id} style={rect(p)} />)}
@@ -346,6 +383,8 @@ export function GameView({ level, save, onPause, onWin }: Props) {
           <div className={`player ${playerSliding ? "player--slide" : ""}`} style={posStyle(body.current.pos)} />
         </div>
       </section>
+      <MobileGameControls onControl={setMobileKey} />
+      {portraitMobile && <MobileOrientationNotice />}
       <div className="level-name">{level.name}</div>
     </main>
   );
@@ -373,4 +412,13 @@ function posStyle(pos: Vec) {
 
 function getCameraTarget(playerX: number) {
   return Math.max(0, Math.min(980, playerX - 480));
+}
+
+function getWorldScale(mobileLandscape: boolean) {
+  if (!mobileLandscape) return 0.5;
+  const availableHeight = Math.max(300, window.innerHeight - 74);
+  const availableWidth = Math.max(520, window.innerWidth - 12);
+  const heightScale = availableHeight / 760;
+  const widthScale = availableWidth / 1280;
+  return Math.max(0.54, Math.min(0.72, heightScale, widthScale));
 }
