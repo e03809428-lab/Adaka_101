@@ -128,7 +128,7 @@ export function startMusic(save: SaveData) {
 export function stopMusic() {
   if (musicTimer) window.clearInterval(musicTimer);
   musicTimer = 0;
-  setSlideSound(false, { volume: 1, music: 0, effects: 0, language: "ru", completed: [], bestTimes: {}, fullscreen: false, keys: { left: "KeyA", right: "KeyD", jump: "Space", action: "KeyW" } });
+  setSlideSound(false, { volume: 1, music: 0, effects: 0, language: "ru", completed: [], completedNights: [], bestTimes: {}, fullscreen: false, keys: { left: "KeyA", right: "KeyD", jump: "Space", action: "KeyW" } });
 }
 
 export function startMenuMusic(save: SaveData) {

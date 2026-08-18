@@ -46,6 +46,7 @@ export type Level = {
 
 export type SaveData = {
   completed: number[];
+  completedNights: number[];
   bestTimes: Record<number, number>;
   language: "ru" | "en";
   volume: number;

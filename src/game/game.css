@@ -52,6 +52,183 @@
   background: #5b1f29;
 }
 
+.shell--forest-menu {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(118, 136, 151, 0.18), transparent 28%),
+    linear-gradient(180deg, rgba(5, 8, 12, 0.35), rgba(2, 3, 5, 0.86)),
+    linear-gradient(180deg, #111923 0%, #070a0f 54%, #020304 100%);
+}
+
+.shell--forest-menu::before,
+.shell--forest-menu::after {
+  position: fixed;
+  inset: auto -8vw 0;
+  z-index: 0;
+  height: 48vh;
+  content: "";
+  pointer-events: none;
+}
+
+.shell--forest-menu::before {
+  opacity: 0.74;
+  background:
+    linear-gradient(90deg, transparent 0 3%, #070a0d 3% 4.5%, transparent 4.5% 7%, #06090c 7% 9%, transparent 9% 13%, #070a0d 13% 14.5%, transparent 14.5% 18%, #05080b 18% 20%, transparent 20% 24%, #070a0d 24% 25.5%, transparent 25.5% 30%, #06090c 30% 32%, transparent 32% 36%, #070a0d 36% 37.5%, transparent 37.5% 42%, #05080b 42% 44%, transparent 44% 49%, #070a0d 49% 50.5%, transparent 50.5% 55%, #06090c 55% 57%, transparent 57% 62%, #070a0d 62% 63.5%, transparent 63.5% 68%, #05080b 68% 70%, transparent 70% 75%, #070a0d 75% 76.5%, transparent 76.5% 81%, #06090c 81% 83%, transparent 83% 88%, #070a0d 88% 89.5%, transparent 89.5% 94%, #05080b 94% 96%, transparent 96%),
+    linear-gradient(180deg, transparent, rgba(1, 2, 3, 0.95) 62%);
+  clip-path: polygon(0 28%, 5% 10%, 9% 31%, 14% 8%, 20% 34%, 25% 12%, 31% 36%, 37% 9%, 43% 35%, 50% 13%, 56% 37%, 63% 8%, 69% 34%, 75% 12%, 81% 33%, 88% 9%, 94% 31%, 100% 13%, 100% 100%, 0 100%);
+}
+
+.shell--forest-menu::after {
+  opacity: 0.5;
+  background:
+    linear-gradient(90deg, transparent 0 6%, #111820 6% 7%, transparent 7% 12%, #10161d 12% 13.5%, transparent 13.5% 22%, #111820 22% 23%, transparent 23% 31%, #10161d 31% 32.5%, transparent 32.5% 41%, #111820 41% 42%, transparent 42% 51%, #10161d 51% 52.5%, transparent 52.5% 61%, #111820 61% 62%, transparent 62% 71%, #10161d 71% 72.5%, transparent 72.5% 81%, #111820 81% 82%, transparent 82% 91%, #10161d 91% 92.5%, transparent 92.5%),
+    linear-gradient(180deg, transparent, rgba(5, 8, 11, 0.9) 68%);
+  clip-path: polygon(0 42%, 7% 21%, 13% 45%, 22% 18%, 31% 46%, 42% 22%, 52% 48%, 62% 18%, 72% 43%, 82% 23%, 92% 45%, 100% 20%, 100% 100%, 0 100%);
+}
+
+.shell--forest-menu .menu-edge-darkness {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.22) 68%, rgba(0, 0, 0, 0.66) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.68), transparent 22%, transparent 78%, rgba(0, 0, 0, 0.68));
+}
+
+.menu-forest-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.menu-forest-bg::before {
+  position: absolute;
+  left: -8vw;
+  right: -8vw;
+  bottom: 0;
+  height: 38vh;
+  background:
+    linear-gradient(180deg, rgba(3, 8, 7, 0), rgba(2, 5, 4, 0.78) 32%, #010201 100%),
+    radial-gradient(ellipse at 22% 80%, rgba(18, 38, 24, 0.34), transparent 24%),
+    radial-gradient(ellipse at 78% 82%, rgba(18, 38, 24, 0.28), transparent 24%);
+  content: "";
+}
+
+.menu-forest-tree {
+  position: absolute;
+  bottom: 18vh;
+  width: clamp(160px, 22vw, 310px);
+  image-rendering: pixelated;
+  opacity: 1;
+  filter: hue-rotate(-28deg) saturate(0.86) brightness(0.62) contrast(1.2) drop-shadow(0 22px 18px rgba(0, 0, 0, 0.52));
+}
+
+.menu-forest-tree--left-far {
+  left: -6vw;
+  bottom: 20vh;
+  width: clamp(170px, 25vw, 350px);
+  transform: rotate(-5deg);
+  opacity: 0.86;
+  filter: hue-rotate(-28deg) saturate(0.8) brightness(0.5) contrast(1.2);
+}
+
+.menu-forest-tree--left {
+  left: 8vw;
+  bottom: 16vh;
+  width: clamp(220px, 30vw, 430px);
+  transform: rotate(4deg);
+}
+
+.menu-forest-tree--center {
+  left: 50%;
+  bottom: 16vh;
+  width: clamp(190px, 25vw, 360px);
+  transform: translateX(-50%);
+  opacity: 0.96;
+}
+
+.menu-forest-tree--right {
+  right: 9vw;
+  bottom: 15vh;
+  width: clamp(210px, 29vw, 410px);
+  transform: rotate(-4deg);
+}
+
+.menu-forest-tree--right-far {
+  right: -7vw;
+  bottom: 20vh;
+  width: clamp(180px, 27vw, 370px);
+  transform: rotate(5deg);
+  opacity: 0.86;
+  filter: hue-rotate(-28deg) saturate(0.8) brightness(0.5) contrast(1.2);
+}
+
+.menu-forest-grass {
+  position: absolute;
+  bottom: 0;
+  width: 38vw;
+  height: 34vh;
+  opacity: 0.7;
+  image-rendering: pixelated;
+  background:
+    radial-gradient(circle, #294f22 0 2px, transparent 2px) 0 0 / 16px 18px,
+    radial-gradient(circle, #143016 0 2px, transparent 2px) 8px 9px / 18px 20px,
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.82) 78%);
+  clip-path: polygon(0 100%, 10% 68%, 15% 86%, 22% 55%, 28% 82%, 36% 48%, 43% 80%, 50% 45%, 58% 84%, 67% 56%, 75% 90%, 84% 63%, 100% 100%);
+}
+
+.menu-forest-grass--one {
+  left: 4vw;
+}
+
+.menu-forest-grass--two {
+  left: 32vw;
+  width: 34vw;
+  opacity: 0.5;
+}
+
+.menu-forest-grass--three {
+  right: 3vw;
+  transform: scaleX(-1);
+}
+
+.shell--forest-menu .panel {
+  z-index: 3;
+  border-color: rgba(168, 185, 195, 0.22);
+  background:
+    linear-gradient(90deg, rgba(150, 170, 180, 0.05) 0 1px, transparent 1px 14px),
+    linear-gradient(0deg, rgba(150, 170, 180, 0.04) 0 1px, transparent 1px 14px),
+    linear-gradient(150deg, rgba(27, 34, 41, 0.96), rgba(7, 10, 14, 0.98) 62%, rgba(2, 3, 5, 0.98));
+  box-shadow:
+    0 26px 74px rgba(0, 0, 0, 0.7),
+    0 0 46px rgba(70, 92, 104, 0.16),
+    inset 0 0 0 1px rgba(218, 235, 244, 0.08),
+    inset 0 0 46px rgba(0, 0, 0, 0.62);
+}
+
+.shell--forest-menu .panel button,
+.shell--forest-menu .panel .button-link {
+  border: 1px solid rgba(181, 204, 214, 0.18);
+  background: linear-gradient(180deg, #46515a, #161b20);
+  box-shadow: inset 0 1px 0 rgba(230, 242, 247, 0.1), 0 10px 24px rgba(0, 0, 0, 0.36);
+}
+
+.shell--forest-menu .panel .menu-alt-game,
+.shell--forest-menu .panel .secondary {
+  background: linear-gradient(180deg, #252d34, #0d1116);
+}
+
+.shell--forest-menu .menu-demon {
+  filter: brightness(0.82) saturate(0.92) contrast(1.05);
+}
+
+.shell--forest-menu .menu-top-demon {
+  filter: brightness(0.78) saturate(0.9) contrast(1.08);
+}
+
 .menu-demon {
   position: fixed;
   top: 50%;
@@ -124,6 +301,63 @@
   border: 2px solid rgba(255, 220, 220, 0.24);
   background: linear-gradient(145deg, rgba(92, 22, 32, 0.98) 0%, rgba(44, 9, 15, 0.98) 100%);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.panel--game-two-menu {
+  overflow: hidden;
+  border-color: rgba(168, 185, 195, 0.24);
+  background:
+    linear-gradient(90deg, rgba(155, 176, 186, 0.06) 0 1px, transparent 1px 12px),
+    linear-gradient(0deg, rgba(155, 176, 186, 0.04) 0 1px, transparent 1px 12px),
+    radial-gradient(circle at 50% -12%, rgba(92, 110, 122, 0.34), transparent 38%),
+    linear-gradient(155deg, rgba(22, 29, 36, 0.98), rgba(5, 7, 10, 0.98) 58%, rgba(2, 3, 5, 0.98));
+  box-shadow:
+    0 26px 72px rgba(0, 0, 0, 0.62),
+    0 0 48px rgba(70, 92, 104, 0.18),
+    inset 0 0 0 1px rgba(218, 235, 244, 0.08),
+    inset 0 0 44px rgba(0, 0, 0, 0.58);
+}
+
+.panel--game-two-menu::before {
+  position: absolute;
+  inset: 8px;
+  z-index: 0;
+  border: 1px solid rgba(168, 185, 195, 0.14);
+  border-radius: 6px;
+  content: "";
+  pointer-events: none;
+}
+
+.panel--game-two-menu > * {
+  position: relative;
+  z-index: 1;
+}
+
+.panel--game-two-menu h1,
+.panel--game-two-menu h2 {
+  color: #e7eef1;
+  text-shadow: 0 0 14px rgba(120, 153, 168, 0.28), 0 2px 0 rgba(0, 0, 0, 0.68);
+}
+
+.panel--game-two-menu p {
+  color: #a7b3b8;
+}
+
+.panel--game-two-menu button,
+.panel--game-two-menu .button-link {
+  border: 1px solid rgba(181, 204, 214, 0.18);
+  background: linear-gradient(180deg, #46515a, #161b20);
+  box-shadow: inset 0 1px 0 rgba(230, 242, 247, 0.1), 0 10px 24px rgba(0, 0, 0, 0.36);
+}
+
+.panel--game-two-menu button:hover,
+.panel--game-two-menu .button-link:hover {
+  filter: brightness(1.12);
+}
+
+.panel--game-two-menu .secondary,
+.panel--game-two-menu .menu-alt-game {
+  background: linear-gradient(180deg, #252d34, #0d1116);
 }
 
 .panel--game-two::after {
@@ -808,6 +1042,10 @@
   -webkit-user-drag: none;
 }
 
+.forest-ice-demon img {
+  filter: drop-shadow(0 0 24px rgba(80, 210, 255, 0.58));
+}
+
 .forest-fire-demon--leaving {
   animation: forestDemonLeave 0.62s ease both;
 }
@@ -1328,6 +1566,7 @@
   justify-items: center;
   gap: 14px;
   animation: manaRitualMenuAppear 0.42s ease both;
+  pointer-events: auto;
 }
 
 .mana-ritual__mana {
@@ -1398,6 +1637,62 @@
   background: rgba(128, 217, 255, 0.18);
 }
 
+.overlay-close-button {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  right: max(14px, env(safe-area-inset-right));
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid rgba(128, 217, 255, 0.58);
+  border-radius: 8px;
+  background: rgba(5, 10, 16, 0.82);
+  color: #8bdcff;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.overlay-close-button--panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+}
+
+.overlay-close-button span {
+  position: relative;
+  width: 22px;
+  height: 22px;
+}
+
+.overlay-close-button span::before,
+.overlay-close-button span::after {
+  position: absolute;
+  left: 9px;
+  top: 0;
+  width: 4px;
+  height: 22px;
+  border-radius: 999px;
+  background: currentColor;
+  content: "";
+}
+
+.overlay-close-button span::before {
+  transform: rotate(45deg);
+}
+
+.overlay-close-button span::after {
+  transform: rotate(-45deg);
+}
+
+.overlay-close-button:active {
+  background: rgba(128, 217, 255, 0.18);
+}
+
 .mana-ritual__ring {
   position: relative;
   width: min(46vw, 360px);
@@ -1455,6 +1750,10 @@
 }
 
 .mana-ritual-controls {
+  display: none;
+}
+
+.mana-ritual-control__key {
   display: none;
 }
 
@@ -1645,7 +1944,18 @@
   width: min(220px, calc(100vw - 36px));
 }
 
-.spell-button {
+.forest-key-buttons {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 10;
+  display: grid;
+  gap: 10px;
+  width: min(220px, calc(100vw - 36px));
+}
+
+.spell-button,
+.forest-key-button {
   position: relative;
   display: flex;
   align-items: center;
@@ -1657,10 +1967,22 @@
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.78);
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.52), inset 0 0 24px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  text-align: left;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.spell-button:active,
+.forest-key-button:active {
+  transform: translateY(1px);
+  filter: brightness(1.12);
 }
 
 .spell-button::before,
-.spell-button::after {
+.spell-button::after,
+.forest-key-button::before,
+.forest-key-button::after {
   position: absolute;
   inset: -12px;
   pointer-events: none;
@@ -1722,6 +2044,11 @@
 }
 
 .spell-button--ice .spell-button__key {
+  background: #161616;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.forest-key-button .spell-button__key {
   background: #161616;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
@@ -1992,11 +2319,12 @@
 
 @media (max-width: 780px), (pointer: coarse) {
   .forest-mobile-controls {
-    display: grid;
+    display: none;
   }
 
-  .spell-buttons {
-    display: none;
+  .spell-buttons,
+  .forest-key-buttons {
+    display: grid;
   }
 }
 
@@ -2009,9 +2337,10 @@
     width: 100%;
     height: 100svh;
     grid-template-rows: auto 1fr;
-    align-content: center;
-    gap: 14px;
-    padding: 22px 140px 16px;
+    justify-items: start;
+    align-content: start;
+    gap: clamp(8px, 2svh, 12px);
+    padding: max(30px, env(safe-area-inset-top)) clamp(260px, 36vw, 390px) max(12px, env(safe-area-inset-bottom)) max(38px, env(safe-area-inset-left));
   }
 
   .mana-ritual__close {
@@ -2036,23 +2365,22 @@
   }
 
   .mana-ritual__ring {
-    width: min(36vw, 42svh, 360px);
+    width: min(34vw, 58svh, 250px);
     align-self: start;
+    justify-self: start;
   }
 
   .mana-ritual__inner {
     color: #7bd3f5;
-    font-size: 0;
+    font-size: clamp(36px, 8svh, 54px);
   }
 
   .mana-ritual__inner > span:first-child {
-    display: none;
+    display: block;
   }
 
   .mana-ritual__direction-icon {
-    position: absolute;
-    inset: 0;
-    display: block;
+    display: none;
   }
 
   .mana-ritual__direction-icon::before,
@@ -2095,32 +2423,56 @@
 
   .mana-ritual-controls {
     position: fixed;
-    inset: 0;
+    top: 50%;
+    right: max(38px, env(safe-area-inset-right));
     z-index: 4;
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, clamp(48px, 10svh, 62px));
+    grid-template-rows: repeat(2, clamp(48px, 10svh, 62px));
     align-items: center;
-    justify-content: space-between;
-    padding: max(18px, env(safe-area-inset-top)) max(54px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(54px, env(safe-area-inset-left));
+    justify-content: center;
+    gap: clamp(8px, 1.8svh, 12px);
+    padding: 0;
     pointer-events: none;
+    transform: translateY(-50%);
   }
 
   .mana-ritual-controls__side {
-    display: grid;
-    gap: 14px;
-    pointer-events: auto;
+    display: contents;
   }
 
   .mana-ritual-control {
     display: grid;
     place-items: center;
-    width: clamp(74px, 9vw, 92px);
-    height: clamp(74px, 9vw, 92px);
+    width: 100%;
+    height: 100%;
     padding: 0;
-    border: 8px solid #7bd3f5;
-    background: transparent;
+    border: clamp(4px, 1svh, 6px) solid #7bd3f5;
+    background: rgba(0, 0, 0, 0.62);
     color: #7bd3f5;
     touch-action: none;
     -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+  }
+
+  .mana-ritual-control--up {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .mana-ritual-control--left {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .mana-ritual-control--down {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .mana-ritual-control--right {
+    grid-column: 3;
+    grid-row: 2;
   }
 
   .mana-ritual-control:active {
@@ -2128,9 +2480,12 @@
   }
 
   .mana-ritual-control__icon {
-    position: relative;
-    width: 44px;
-    height: 44px;
+    display: none;
+  }
+
+  .mana-ritual-control__icon::before,
+  .mana-ritual-control__icon::after {
+    display: none;
   }
 
   .mana-ritual-control__icon::before,
@@ -2166,6 +2521,16 @@
 
   .mana-ritual-control--right .mana-ritual-control__icon {
     transform: rotate(90deg);
+  }
+
+  .mana-ritual-control__key {
+    position: relative;
+    z-index: 1;
+    display: block;
+    color: currentColor;
+    font-size: clamp(25px, 6svh, 38px);
+    font-weight: 900;
+    line-height: 1;
   }
 
   .mana-ritual ~ .forest-mobile-controls {
@@ -2637,12 +3002,19 @@
   transition: left 0.28s ease, top 0.28s ease;
 }
 
+.full-map-ice-demon {
+  background: #62d8ff;
+  box-shadow: 0 0 18px rgba(98, 216, 255, 0.76);
+}
+
 .full-map-red-demon--moving {
   animation: redDemonMapMove 0.62s ease both;
 }
 
 .full-map-red-demon--center { left: 50%; top: 50%; }
+.full-map-red-demon--north { left: 50%; top: 14%; }
 .full-map-red-demon--east { left: 86%; top: 50%; }
+.full-map-red-demon--south { left: 50%; top: 86%; }
 .full-map-red-demon--west { left: 14%; top: 50%; }
 .full-map-red-demon--northWest { left: 14%; top: 14%; }
 .full-map-red-demon--northEast { left: 86%; top: 14%; }
@@ -3444,6 +3816,65 @@
   padding: 12px 16px;
   font-size: 16px;
   background: #d83a42;
+}
+
+.level-buttons button:disabled {
+  cursor: not-allowed;
+  color: rgba(226, 235, 240, 0.46);
+  background: linear-gradient(180deg, #22282d, #0b0e12);
+  border-color: rgba(160, 176, 184, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  filter: none;
+}
+
+.night-guide-panel {
+  width: min(620px, 100%);
+}
+
+.night-guide-list {
+  display: grid;
+  gap: 8px;
+}
+
+.night-guide-item {
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid rgba(255, 90, 105, 0.14);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.night-guide-item strong {
+  color: #ffbec2;
+  font-size: 15px;
+}
+
+.night-guide-item span {
+  color: #d9e7ff;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.night-guide-mana {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(128, 217, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(1, 8, 14, 0.52);
+}
+
+.night-guide-mana h2 {
+  margin: 0;
+  color: #bdeeff;
+  font-size: 24px;
+}
+
+.night-guide-mana p {
+  margin: 0;
 }
 .menu-alt-game {
   position: absolute;
@@ -4287,6 +4718,19 @@
 }
 
 @media (pointer: coarse) and (orientation: landscape) {
+  .full-map-overlay {
+    padding: max(10px, env(safe-area-inset-top)) max(58px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(58px, env(safe-area-inset-left));
+  }
+
+  .full-forest-map {
+    width: min(68vw, calc(100svh - 24px));
+    max-width: calc(100vw - 132px);
+  }
+
+  .full-map-label {
+    font-size: clamp(10px, 2.2svh, 13px);
+  }
+
   .health-hud {
     top: max(8px, env(safe-area-inset-top));
     left: max(8px, env(safe-area-inset-left));
@@ -4313,28 +4757,51 @@
   }
 
   .forest-mobile-controls {
-    right: max(8px, env(safe-area-inset-right));
+    display: none;
+  }
+
+  .spell-buttons,
+  .forest-key-buttons {
     bottom: max(8px, env(safe-area-inset-bottom));
-    grid-template-columns: repeat(5, clamp(38px, 8svh, 50px));
-    gap: clamp(6px, 1.4vw, 9px);
+    gap: clamp(5px, 1.2svh, 8px);
+    width: min(190px, 28vw);
   }
 
-  .forest-mobile-control {
-    width: clamp(38px, 8svh, 50px);
-    border-width: 1px;
+  .spell-buttons {
+    left: max(8px, env(safe-area-inset-left));
   }
 
-  .mobile-forest-icon {
-    transform: scale(0.82);
+  .forest-key-buttons {
+    right: max(8px, env(safe-area-inset-right));
+  }
+
+  .spell-button,
+  .forest-key-button {
+    min-height: clamp(38px, 8svh, 48px);
+    gap: 8px;
+    padding: 6px 8px 6px 6px;
+  }
+
+  .spell-button__key {
+    width: clamp(28px, 6svh, 34px);
+    font-size: clamp(15px, 3.5svh, 18px);
+  }
+
+  .spell-button__title {
+    font-size: clamp(8px, 1.8svh, 10px);
+  }
+
+  .spell-button__text {
+    font-size: clamp(7px, 1.6svh, 9px);
   }
 
   .mana-ritual__content {
     gap: clamp(8px, 2svh, 12px);
-    padding: max(12px, env(safe-area-inset-top)) clamp(96px, 17vw, 138px) max(12px, env(safe-area-inset-bottom));
+    padding: max(30px, env(safe-area-inset-top)) clamp(260px, 36vw, 390px) max(12px, env(safe-area-inset-bottom)) max(38px, env(safe-area-inset-left));
   }
 
   .mana-ritual__ring {
-    width: min(34vw, 48svh, 330px);
+    width: min(34vw, 58svh, 250px);
   }
 
   .mana-ritual__close {
@@ -4343,13 +4810,18 @@
   }
 
   .mana-ritual-controls {
-    padding: max(10px, env(safe-area-inset-top)) max(32px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(32px, env(safe-area-inset-left));
+    top: 50%;
+    right: max(38px, env(safe-area-inset-right));
+    grid-template-columns: repeat(3, clamp(48px, 10svh, 62px));
+    grid-template-rows: repeat(2, clamp(48px, 10svh, 62px));
+    padding: 0;
+    transform: translateY(-50%);
   }
 
   .mana-ritual-control {
-    width: clamp(54px, 13svh, 82px);
-    height: clamp(54px, 13svh, 82px);
-    border-width: clamp(4px, 1.2vw, 7px);
+    width: 100%;
+    height: 100%;
+    border-width: clamp(4px, 1svh, 6px);
   }
 
   .mana-ritual-control__icon {
@@ -4358,6 +4830,16 @@
 }
 
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 390px) {
+  .full-map-overlay {
+    padding-left: max(44px, env(safe-area-inset-left));
+    padding-right: max(44px, env(safe-area-inset-right));
+  }
+
+  .full-forest-map {
+    width: min(62vw, calc(100svh - 18px));
+    max-width: calc(100vw - 104px);
+  }
+
   .health-hud {
     width: min(180px, 32vw);
     padding: 5px 7px;
@@ -4368,25 +4850,56 @@
   }
 
   .forest-mobile-controls {
-    grid-template-columns: repeat(5, 38px);
-    gap: 6px;
+    display: none;
   }
 
-  .forest-mobile-control {
-    width: 38px;
+  .spell-buttons,
+  .forest-key-buttons {
+    width: min(160px, 27vw);
+    gap: 4px;
+  }
+
+  .spell-button,
+  .forest-key-button {
+    min-height: 34px;
+    padding: 5px 6px;
+  }
+
+  .spell-button__key {
+    width: 26px;
+    font-size: 14px;
+  }
+
+  .spell-button__title {
+    font-size: 8px;
+  }
+
+  .spell-button__text {
+    display: none;
   }
 
   .mana-ritual__content {
-    padding-left: clamp(80px, 15vw, 110px);
-    padding-right: clamp(80px, 15vw, 110px);
+    padding-left: max(28px, env(safe-area-inset-left));
+    padding-right: clamp(218px, 35vw, 300px);
   }
 
   .mana-ritual__ring {
-    width: min(32vw, 44svh, 260px);
+    width: min(31vw, 56svh, 210px);
+  }
+
+  .mana-ritual-controls {
+    right: max(24px, env(safe-area-inset-right));
+    grid-template-columns: repeat(3, clamp(42px, 11svh, 54px));
+    grid-template-rows: repeat(2, clamp(42px, 11svh, 54px));
+    gap: 7px;
   }
 
   .mana-ritual-control {
-    width: clamp(48px, 13svh, 62px);
-    height: clamp(48px, 13svh, 62px);
+    width: 100%;
+    height: 100%;
+  }
+
+  .mana-ritual-control__key {
+    font-size: clamp(22px, 6svh, 30px);
   }
 }

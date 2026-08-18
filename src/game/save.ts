@@ -4,6 +4,7 @@ const key = "ten-seconds-ago-save";
 
 export const defaultSave: SaveData = {
   completed: [],
+  completedNights: [],
   bestTimes: {},
   language: "ru",
   volume: 0.7,
@@ -22,6 +23,7 @@ export function loadSave(): SaveData {
     return {
       ...defaultSave,
       ...parsed,
+      completedNights: parsed.completedNights ?? [],
       bestTimes: parsed.bestTimes ?? {},
       keys: {
         ...defaultSave.keys,
