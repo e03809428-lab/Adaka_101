@@ -416,9 +416,9 @@ function getCameraTarget(playerX: number) {
 
 function getWorldScale(mobileLandscape: boolean) {
   if (!mobileLandscape) return 0.5;
-  const availableHeight = Math.max(300, window.innerHeight - 74);
-  const availableWidth = Math.max(520, window.innerWidth - 12);
+  const availableHeight = Math.max(240, window.innerHeight - 104);
+  const availableWidth = Math.max(460, window.innerWidth - 12);
   const heightScale = availableHeight / 760;
-  const widthScale = availableWidth / 1280;
-  return Math.max(0.54, Math.min(0.72, heightScale, widthScale));
+  const widthScale = availableWidth / 980;
+  return Math.max(0.44, Math.min(0.78, heightScale, widthScale));
 }
