@@ -1,38 +1,42 @@
+import { t } from "../game/language";
+import type { SaveData } from "../game/types";
+
 type NightGuideProps = {
   onBack: () => void;
+  language: SaveData["language"];
 };
 
 const guideItems = [
-  { key: "W/A/S/D", text: "смотреть вверх, вниз и поворачиваться по сторонам" },
-  { key: "J", text: "огненное заклинание против ледяного демона" },
-  { key: "K", text: "ледяное заклинание против красного демона" },
-  { key: "E", text: "накопление стихийной маны" },
-  { key: "Q", text: "накопление внешней маны" },
-  { key: "M", text: "карта леса и позиции демонов" },
-];
+  { key: "W/A/S/D", textKey: "guideMove" },
+  { key: "J", textKey: "guideFire" },
+  { key: "K", textKey: "guideIce" },
+  { key: "E", textKey: "guideElementalMana" },
+  { key: "Q", textKey: "guideExternalMana" },
+  { key: "M", textKey: "guideMap" },
+] as const;
 
-export function NightGuide({ onBack }: NightGuideProps) {
+export function NightGuide({ onBack, language }: NightGuideProps) {
   return (
     <section className="panel night-guide-panel panel--game-two-menu">
-      <h1>Гайд</h1>
-      <p>Твоя задача - пережить ночь и не дать демонам добраться до ядра леса.</p>
+      <h1>{t(language, "guide")}</h1>
+      <p>{t(language, "guideIntro")}</p>
       <div className="night-guide-list">
         {guideItems.map((item) => (
           <div className="night-guide-item" key={item.key}>
             <strong>{item.key}</strong>
-            <span>{item.text}</span>
+            <span>{t(language, item.textKey)}</span>
           </div>
         ))}
       </div>
       <div className="night-guide-mana">
-        <h2>Накопление маны</h2>
-        <p>Нажми `E`, чтобы открыть стихийную ману, или `Q`, чтобы открыть внешнюю ману.</p>
-        <p>В центре круга появляется буква: `W`, `A`, `S` или `D`. Нажимай такую же кнопку, когда синяя стрелка попадает в подсвеченный сектор круга.</p>
-        <p>Если попал вовремя, мана прибавится. Если нажал не ту букву или не попал в сектор, появится новая буква и новая цель.</p>
-        <p>Выйти из меню можно кнопкой `X` или повторным нажатием `E`/`Q`.</p>
+        <h2>{t(language, "guideManaTitle")}</h2>
+        <p>{t(language, "guideManaBodyOne")}</p>
+        <p>{t(language, "guideManaBodyTwo")}</p>
+        <p>{t(language, "guideManaBodyThree")}</p>
+        <p>{t(language, "guideManaBodyFour")}</p>
       </div>
-      <p>Красный демон атакует с запада и востока. Ледяной демон атакует с севера и юга. Следи за картой и копи ману заранее.</p>
-      <button type="button" className="secondary" onClick={onBack}>Назад</button>
+      <p>{t(language, "guideWarning")}</p>
+      <button type="button" className="secondary" onClick={onBack}>{t(language, "back")}</button>
     </section>
   );
 }

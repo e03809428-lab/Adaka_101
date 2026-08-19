@@ -137,7 +137,7 @@ export function GameTwoPage() {
         {renderMenuForest()}
         <div className="menu-edge-darkness" aria-hidden="true" />
         <section className="panel level-panel">
-          <h1>{save.language === "ru" ? "Выбери ночь" : "Choose a night"}</h1>
+          <h1>{text("chooseNight")}</h1>
           <p>{text("levelsIntro")}</p>
           <div className="level-buttons">
             {[1, 2, 3, 4, 5].map((night) => (
@@ -161,7 +161,15 @@ export function GameTwoPage() {
   }
 
   if (stage === "night") {
-    return <NightForestScene onBack={handleBackToMenu} save={save} setSave={setSave} night={selectedNight} initialWon={shouldStartWon} />;
+    return (
+      <NightForestScene
+        onBack={handleBackToMenu}
+        save={save}
+        setSave={setSave}
+        night={selectedNight}
+        initialWon={shouldStartWon}
+      />
+    );
   }
 
   if (stage === "settings") {
@@ -172,12 +180,12 @@ export function GameTwoPage() {
         <section className="panel panel--game-two-menu">
           <h2>{text("settings")}</h2>
           <label><span>{text("language")}</span><button type="button" onClick={() => { click(); setSave({ ...save, language: save.language === "ru" ? "en" : "ru" }); }}>{save.language === "ru" ? text("switchToEnglish") : text("switchToRussian")}</button></label>
-          <label><span>{save.language === "ru" ? "Общая громкость" : "Master volume"}</span><input type="range" min="0" max="1" step="0.05" value={save.volume} onChange={(e) => setSave({ ...save, volume: Number(e.target.value) })} /></label>
+          <label><span>{text("masterVolume")}</span><input type="range" min="0" max="1" step="0.05" value={save.volume} onChange={(e) => setSave({ ...save, volume: Number(e.target.value) })} /></label>
           <label><span>{text("music")}</span><input type="range" min="0" max="1" step="0.05" value={save.music} onChange={(e) => setSave({ ...save, music: Number(e.target.value) })} /></label>
           <label><span>{text("effects")}</span><input type="range" min="0" max="1" step="0.05" value={save.effects} onChange={(e) => setSave({ ...save, effects: Number(e.target.value) })} /></label>
           <button type="button" onClick={() => { click(); setSave({ ...save, fullscreen: !save.fullscreen }); }}>{save.fullscreen ? text("windowed") : text("fullscreen")}</button>
           <button type="button" onClick={() => { click(); transitionTo("night", () => { setShouldStartWon(true); }); }}>
-            Победа
+            {text("victory")}
           </button>
           <button type="button" className="secondary" onClick={handleBackToMenu}>{text("back")}</button>
         </section>
@@ -190,7 +198,7 @@ export function GameTwoPage() {
       <main className={`shell shell--red shell--forest-menu ${screenClass}`}>
         {renderMenuForest()}
         <div className="menu-edge-darkness" aria-hidden="true" />
-        <NightGuide onBack={handleBackToMenu} />
+        <NightGuide onBack={handleBackToMenu} language={save.language} />
       </main>
     );
   }
@@ -203,10 +211,10 @@ export function GameTwoPage() {
       <img className="menu-top-demon" src={menuDarkDemonImage} alt="" aria-hidden="true" />
       <div className="menu-edge-darkness" aria-hidden="true" />
       <section className="panel panel--game-two panel--held-menu panel--game-two-menu">
-        <Link className="menu-alt-game" href="/game">{save.language === "ru" ? "Первая игра" : "First game"}</Link>
+        <Link className="menu-alt-game" href="/game">{text("firstGame")}</Link>
         <h1>{text("gameTitle")}</h1>
         <button type="button" onPointerDown={syncMenuBeat} onClick={handleOpenLevels}>{text("play")}</button>
-        <button type="button" onClick={() => { click(); setMenuMusicMood("calm"); transitionTo("guide"); }}>Гайд</button>
+        <button type="button" onClick={() => { click(); setMenuMusicMood("calm"); transitionTo("guide"); }}>{text("guide")}</button>
         <button type="button" onClick={() => { click(); transitionTo("settings"); }}>{text("settings")}</button>
         <button type="button" onClick={() => { click(); startMenuAudio(); }}>{text("about")}</button>
       </section>

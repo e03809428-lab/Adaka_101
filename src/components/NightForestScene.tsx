@@ -15,7 +15,7 @@ type ForestPlace = "center" | Direction;
 type FullMapPhase = "closed" | "closingIn" | "open" | "closingOut" | "opening";
 type ManaRitualPhase = FullMapPhase;
 type FireSpellPhase = "idle" | "charging" | "shooting" | "ending";
-type ActiveSpell = "fire" | "ice" | null;
+type ActiveSpell = "fire" | "ice" | "light" | null;
 type ManaRitualKind = "elemental" | "external";
 type DemonNode = "center" | "north" | "east" | "south" | "west" | "northWest" | "northEast" | "southWest" | "southEast";
 type TurnMotion = "left" | "right" | "up" | "down";
@@ -58,13 +58,15 @@ const demonDistanceToCenter: Record<DemonNode, number> = {
 const turnCooldownMs = 200;
 const nightHourMs = 90000;
 const nightTickMs = 250;
-const minFireDemonAiMs = 12000;
-const maxFireDemonAiMs = 24000;
-const fireDemonReactionMs = 15000;
+const minDemonAiMs = 12000;
+const maxDemonAiMs = 24000;
 const maxPlayerMana = 50;
 const maxExternalMana = 100;
-const fireSpellManaCost = 10;
-const iceSpellManaCost = 15;
+const fireSpellManaCost = 8;
+const iceSpellManaCost = 6;
+const lightSpellElementalCost = 7;
+const lightSpellExternalCost = 4.5;
+const startingExternalMana = 20;
 const fireSpellChargeMs = 2000;
 const fireSpellShootMs = 1300;
 const fireSpellEndMs = 520;
@@ -78,6 +80,8 @@ const manaRitualSectorGapDegrees = 1.5;
 const manaRitualTryCooldownMs = 200;
 const manaGain = 1;
 const externalManaGain = 1;
+const forestExternalManaDrainMs = 5000;
+const mapExternalManaDrainMs = 2000;
 const manaRitualLetters = ["A", "S", "D", "W"] as const;
 type ManaRitualLetter = (typeof manaRitualLetters)[number];
 const manaRitualKeyByCode: Record<string, ManaRitualLetter> = {
@@ -97,8 +101,34 @@ const manaRitualKeyBySymbol: Record<string, ManaRitualLetter> = {
   ц: "W",
 };
 
-function nextFireDemonAiMs() {
-  return minFireDemonAiMs + Math.random() * (maxFireDemonAiMs - minFireDemonAiMs);
+function nextDemonAiMs(speed = 1) {
+  return (minDemonAiMs + Math.random() * (maxDemonAiMs - minDemonAiMs)) / speed;
+}
+
+function nightAiLevel(night: number, hour: number) {
+  const baseByNight = [0, 1, 3, 5, 7, 9][night] ?? 9;
+  return Math.min(16, baseByNight + Math.floor(hour / 2));
+}
+
+function nightReactionMs(night: number) {
+  const reactionByNight = [0, 18500, 16500, 14500, 12500, 11000][night] ?? 11000;
+  return reactionByNight;
+}
+
+function nightSpeedScale(night: number) {
+  const speedByNight = [0, 0.72, 0.9, 1.05, 1.18, 1.32][night] ?? 1.32;
+  return speedByNight;
+}
+
+function darkDemonMaxAttacks(night: number) {
+  if (night === 4) return 12;
+  if (night >= 5) return 3;
+  return 0;
+}
+
+function nextDarkDemonAiMs(night: number) {
+  if (night === 4) return 6000 + Math.random() * 5000;
+  return 28000 + Math.random() * 18000;
 }
 
 function grassPixels(direction: Direction) {
@@ -253,11 +283,12 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
   const [fullMapPhase, setFullMapPhase] = useState<FullMapPhase>("closed");
   const [fireDemonNode, setFireDemonNode] = useState<DemonNode>(() => randomFireOuterNode());
   const [iceDemonNode, setIceDemonNode] = useState<DemonNode>(() => randomIceOuterNode());
+  const [darkDemonNode, setDarkDemonNode] = useState<DemonNode | null>(null);
   const [fireDemonAttackDirection, setFireDemonAttackDirection] = useState<Direction>(() => randomHorizontalDirection());
   const [iceDemonAttackDirection, setIceDemonAttackDirection] = useState<Direction>(() => randomVerticalDirection());
   const [nightHour, setNightHour] = useState(0);
   const [playerMana, setPlayerMana] = useState(0);
-  const [externalMana, setExternalMana] = useState(0);
+  const [externalMana, setExternalMana] = useState(startingExternalMana);
   const [fireSpellPhase, setFireSpellPhase] = useState<FireSpellPhase>("idle");
   const [activeSpell, setActiveSpell] = useState<ActiveSpell>(null);
   const [activeSpellHitsTarget, setActiveSpellHitsTarget] = useState(false);
@@ -275,6 +306,8 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
   const [isFireDemonLeaving, setIsFireDemonLeaving] = useState(false);
   const [isIceDemonMoving, setIsIceDemonMoving] = useState(false);
   const [isIceDemonLeaving, setIsIceDemonLeaving] = useState(false);
+  const [isDarkDemonMoving, setIsDarkDemonMoving] = useState(false);
+  const [isDarkDemonLeaving, setIsDarkDemonLeaving] = useState(false);
   const [isIntroLetterOpen, setIsIntroLetterOpen] = useState(false);
   const [isIntroLetterClosing, setIsIntroLetterClosing] = useState(false);
   const [isIntroLetterDone, setIsIntroLetterDone] = useState(night !== 1);
@@ -285,10 +318,14 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
   const nightProgressMs = useRef(0);
   const fireDemonAiProgressMs = useRef(0);
   const iceDemonAiProgressMs = useRef(0);
-  const fireDemonAiTargetMs = useRef(nextFireDemonAiMs());
-  const iceDemonAiTargetMs = useRef(nextFireDemonAiMs());
+  const darkDemonAiProgressMs = useRef(0);
+  const fireDemonAiTargetMs = useRef(nextDemonAiMs());
+  const iceDemonAiTargetMs = useRef(nextDemonAiMs());
+  const darkDemonAiTargetMs = useRef(nextDarkDemonAiMs(night));
+  const darkDemonAttacks = useRef(0);
   const fireDemonThreatTimeout = useRef(0);
   const iceDemonThreatTimeout = useRef(0);
+  const darkDemonThreatTimeout = useRef(0);
   const manaRitualStartedAt = useRef(0);
   const lastManaRitualTryAt = useRef(0);
   const lastManaRitualLetterChangeAt = useRef(0);
@@ -300,7 +337,11 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
   const groundDirection = view === "up" ? direction : view;
   const text = (key: Parameters<typeof t>[1]) => t(save.language, key);
   const clockText = `${nightHour === 0 ? 12 : nightHour}.00`;
-  const isFireDemonNight = night >= 1;
+  const isFireDemonNight = night >= 1 && night !== 4;
+  const isDarkDemonNight = night >= 4;
+  const isAnyDemonNight = isFireDemonNight || isDarkDemonNight;
+  const currentDemonReactionMs = nightReactionMs(night);
+  const currentDemonSpeedScale = nightSpeedScale(night);
   const fireDemonViewDirection = fireDemonNode === "center" ? fireDemonAttackDirection : demonDirectionFromNode(fireDemonNode);
   const iceDemonViewDirection = iceDemonNode === "center" ? iceDemonAttackDirection : demonDirectionFromNode(iceDemonNode);
   const showFireDemon =
@@ -315,8 +356,10 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
     view !== "up" &&
     (iceDemonViewDirection === "north" || iceDemonViewDirection === "south") &&
     groundDirection === iceDemonViewDirection;
+  const showDarkDemon = isDarkDemonNight && darkDemonNode === place && view !== "up" && groundDirection === "north";
   const shouldRenderFireDemon = showFireDemon || isFireDemonLeaving;
   const shouldRenderIceDemon = showIceDemon || isIceDemonLeaving;
+  const shouldRenderDarkDemon = showDarkDemon || isDarkDemonLeaving;
   const isFullMapMenuOpen = fullMapPhase === "open";
   const isManaRitualOpen = manaRitualPhase === "open";
   const isManaRitualActive = manaRitualPhase !== "closed";
@@ -328,6 +371,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
   const activeManaRitualSectors = manaRitualKind === "external" ? externalManaRitualSectors : manaRitualSectors;
   const activeManaRitualSectorStepDegrees = 360 / activeManaRitualSectors;
   const activeManaRitualSectorWidthDegrees = manaRitualKind === "external" ? externalManaRitualSectorWidthDegrees : manaRitualSectorWidthDegrees;
+  const isExternalManaEmpty = externalMana <= 0;
 
   const pushFireDemonAway = () => {
     window.clearTimeout(fireDemonThreatTimeout.current);
@@ -343,25 +387,44 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
     window.setTimeout(() => setIsIceDemonLeaving(false), 620);
   };
 
-  const castSpell = (spell: Exclude<ActiveSpell, null>, manaCost: number, hitsTarget = false) => {
-    if (isSpellActive || playerMana < manaCost) return;
+  const pushDarkDemonAway = () => {
+    window.clearTimeout(darkDemonThreatTimeout.current);
+    setIsDarkDemonLeaving(true);
+    setDarkDemonNode(null);
+    window.setTimeout(() => setIsDarkDemonLeaving(false), 620);
+  };
+
+  const castSpell = (
+    spell: Exclude<ActiveSpell, null>,
+    manaCost: number,
+    hitsTarget = false,
+    externalCost = 0,
+  ) => {
+    if (isSpellActive || isExternalManaEmpty || playerMana < manaCost || externalMana < externalCost) return;
 
     if (hitsTarget) {
       window.clearTimeout(fireDemonThreatTimeout.current);
       window.clearTimeout(iceDemonThreatTimeout.current);
+      window.clearTimeout(darkDemonThreatTimeout.current);
       if (spell === "fire" && fireDemonNode === "center") {
         fireDemonThreatTimeout.current = window.setTimeout(() => {
           setIsLossPending(true);
-        }, fireDemonReactionMs);
+        }, currentDemonReactionMs);
       }
       if (spell === "ice" && iceDemonNode === "center") {
         iceDemonThreatTimeout.current = window.setTimeout(() => {
           setIsLossPending(true);
-        }, fireDemonReactionMs);
+        }, currentDemonReactionMs);
+      }
+      if (spell === "light" && darkDemonNode === "center") {
+        darkDemonThreatTimeout.current = window.setTimeout(() => {
+          setIsLossPending(true);
+        }, currentDemonReactionMs);
       }
     }
 
     setPlayerMana((current) => current - manaCost);
+    if (externalCost > 0) setExternalMana((current) => current - externalCost);
     setActiveSpell(spell);
     setActiveSpellHitsTarget(hitsTarget);
     setFireSpellPhase("charging");
@@ -380,6 +443,13 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
       }, fireSpellChargeMs + spellImpactDelayMs));
       fireSpellTimeouts.current.push(window.setTimeout(() => setIceImpactKey(0), fireSpellChargeMs + 1100));
     }
+    if (spell === "light" && hitsTarget) {
+      fireSpellTimeouts.current.push(window.setTimeout(() => {
+        setFireImpactKey((current) => current + 1);
+        if (showDarkDemon) pushDarkDemonAway();
+      }, fireSpellChargeMs + spellImpactDelayMs));
+      fireSpellTimeouts.current.push(window.setTimeout(() => setFireImpactKey(0), fireSpellChargeMs + 1100));
+    }
     fireSpellTimeouts.current.push(window.setTimeout(() => {
       setFireSpellPhase("ending");
     }, fireSpellChargeMs + fireSpellShootMs));
@@ -395,6 +465,11 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
     if (!showFireDemon && !showIceDemon) return;
 
     castSpell("ice", iceSpellManaCost, true);
+  };
+  const castLightSpell = () => {
+    if (!showDarkDemon) return;
+
+    castSpell("light", lightSpellElementalCost, true, lightSpellExternalCost);
   };
 
   const pressGameKey = (code: string, key = "") => {
@@ -642,13 +717,13 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
       fireDemonAiProgressMs.current += nightTickMs * timeScale;
       if (fireDemonAiProgressMs.current >= fireDemonAiTargetMs.current) {
         fireDemonAiProgressMs.current = 0;
-        fireDemonAiTargetMs.current = nextFireDemonAiMs();
+        fireDemonAiTargetMs.current = nextDemonAiMs(currentDemonSpeedScale * 1.5);
 
         setFireDemonNode((current) => {
           const isPlayerFacingDemon = current === place && view !== "up" && (place === "center" || groundDirection === place);
           if (isPlayerFacingDemon) return current;
 
-          const aiLevel = night === 1 ? 2 + Math.floor(nightHour / 2) : 3 + nightHour;
+          const aiLevel = nightAiLevel(night, nightHour);
           const moveRoll = Math.floor(Math.random() * 20) + 1;
           if (moveRoll > aiLevel) return current;
 
@@ -659,7 +734,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
 
           if (nextNode !== current) {
             setIsFireDemonMoving(true);
-            const moveDelayMs = isFullMapMenuOpen ? 760 : 420;
+            const moveDelayMs = isFullMapMenuOpen ? 560 : 340;
             window.setTimeout(() => {
               if (nextNode === "center") setFireDemonAttackDirection(randomHorizontalDirection());
               setFireDemonNode(nextNode);
@@ -674,13 +749,13 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
       iceDemonAiProgressMs.current += nightTickMs * timeScale;
       if (iceDemonAiProgressMs.current < iceDemonAiTargetMs.current) return;
       iceDemonAiProgressMs.current = 0;
-      iceDemonAiTargetMs.current = nextFireDemonAiMs();
+      iceDemonAiTargetMs.current = nextDemonAiMs(currentDemonSpeedScale);
 
       setIceDemonNode((current) => {
         const isPlayerFacingDemon = current === place && view !== "up" && (place === "center" || groundDirection === place);
         if (isPlayerFacingDemon) return current;
 
-          const aiLevel = night === 1 ? 2 + Math.floor(nightHour / 2) : 3 + nightHour;
+        const aiLevel = nightAiLevel(night, nightHour);
         const moveRoll = Math.floor(Math.random() * 20) + 1;
         if (moveRoll > aiLevel) return current;
 
@@ -704,7 +779,48 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
     }, nightTickMs);
 
     return () => window.clearInterval(interval);
-  }, [groundDirection, isFireDemonNight, isFullMapMenuOpen, isIntroLetterOpen, isLost, isPaused, isWon, manaRitualTimeScale, nightHour, place, view]);
+  }, [currentDemonSpeedScale, groundDirection, isFireDemonNight, isFullMapMenuOpen, isIntroLetterOpen, isLost, isPaused, isWon, manaRitualTimeScale, nightHour, place, view]);
+
+  useEffect(() => {
+    if (!isDarkDemonNight || isPaused || isWon || isLost || isIntroLetterOpen) return;
+
+    const interval = window.setInterval(() => {
+      if (darkDemonAttacks.current >= darkDemonMaxAttacks(night) && darkDemonNode === null) return;
+
+      const timeScale = (isFullMapMenuOpen ? 2 : 1) * manaRitualTimeScale;
+      darkDemonAiProgressMs.current += nightTickMs * timeScale;
+      if (darkDemonAiProgressMs.current < darkDemonAiTargetMs.current) return;
+
+      darkDemonAiProgressMs.current = 0;
+      darkDemonAiTargetMs.current = nextDarkDemonAiMs(night);
+
+      setDarkDemonNode((current) => {
+        if (current === "center") return current;
+
+        if (current === "north") {
+          setIsDarkDemonMoving(true);
+          window.setTimeout(() => {
+            setDarkDemonNode("center");
+            setIsDarkDemonMoving(false);
+            setIsDarkDemonLeaving(false);
+          }, isFullMapMenuOpen ? 240 : 480);
+          return current;
+        }
+
+        if (darkDemonAttacks.current >= darkDemonMaxAttacks(night)) return current;
+
+        darkDemonAttacks.current += 1;
+        setIsDarkDemonMoving(true);
+        window.setTimeout(() => {
+          setDarkDemonNode("north");
+          setIsDarkDemonMoving(false);
+        }, isFullMapMenuOpen ? 180 : 360);
+        return current;
+      });
+    }, nightTickMs);
+
+    return () => window.clearInterval(interval);
+  }, [darkDemonNode, isDarkDemonNight, isFullMapMenuOpen, isIntroLetterOpen, isLost, isPaused, isWon, manaRitualTimeScale, night]);
 
   useEffect(() => {
     if (!isLossPending || isLost) return;
@@ -724,26 +840,34 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
   useEffect(() => {
     window.clearTimeout(fireDemonThreatTimeout.current);
     window.clearTimeout(iceDemonThreatTimeout.current);
+    window.clearTimeout(darkDemonThreatTimeout.current);
 
-    if (!isFireDemonNight || isLost || isWon || isPaused || isIntroLetterOpen) return;
+    if (!isAnyDemonNight || isLost || isWon || isPaused || isIntroLetterOpen) return;
 
     if (fireDemonNode === "center") {
       fireDemonThreatTimeout.current = window.setTimeout(() => {
         setIsLossPending(true);
-      }, fireDemonReactionMs);
+      }, currentDemonReactionMs);
     }
 
     if (iceDemonNode === "center") {
       iceDemonThreatTimeout.current = window.setTimeout(() => {
         setIsLossPending(true);
-      }, fireDemonReactionMs);
+      }, currentDemonReactionMs);
+    }
+
+    if (darkDemonNode === "center") {
+      darkDemonThreatTimeout.current = window.setTimeout(() => {
+        setIsLossPending(true);
+      }, currentDemonReactionMs);
     }
 
     return () => {
       window.clearTimeout(fireDemonThreatTimeout.current);
       window.clearTimeout(iceDemonThreatTimeout.current);
+      window.clearTimeout(darkDemonThreatTimeout.current);
     };
-  }, [fireDemonNode, iceDemonNode, isFireDemonNight, isIntroLetterOpen, isLost, isPaused, isWon]);
+  }, [currentDemonReactionMs, darkDemonNode, fireDemonNode, iceDemonNode, isAnyDemonNight, isIntroLetterOpen, isLost, isPaused, isWon]);
 
   useEffect(() => {
     let timeout = 0;
@@ -798,6 +922,11 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
         return;
       }
 
+      if (event.code === "KeyL") {
+        castLightSpell();
+        return;
+      }
+
       if (fullMapPhase !== "closed") return;
 
       if (event.code === "KeyE" || event.code === "KeyQ") {
@@ -830,23 +959,49 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
       window.clearTimeout(timeout);
       window.removeEventListener("keydown", handleKey);
     };
-  }, [direction, fullMapPhase, groundDirection, isIntroLetterOpen, isLost, isManaRitualActive, isManaRitualOpen, isPaused, isSpellActive, isWon, manaRitualLetter, manaRitualPhase, manaTargetSector, onBack, place, playerMana, showFireDemon, view]);
+  }, [direction, externalMana, fullMapPhase, groundDirection, isIntroLetterOpen, isLost, isManaRitualActive, isManaRitualOpen, isPaused, isSpellActive, isWon, manaRitualLetter, manaRitualPhase, manaTargetSector, onBack, place, playerMana, showDarkDemon, showFireDemon, view]);
 
   useEffect(() => {
     return () => {
       window.clearTimeout(cooldownTimeout.current);
       window.clearTimeout(fireDemonThreatTimeout.current);
       window.clearTimeout(iceDemonThreatTimeout.current);
+      window.clearTimeout(darkDemonThreatTimeout.current);
       fullMapTimeouts.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
       fireSpellTimeouts.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
     };
   }, []);
 
   useEffect(() => {
+    if (isPaused || isWon || isLost || isIntroLetterOpen || isManaRitualActive || isFullMapMenuOpen) return;
+
+    const interval = window.setInterval(() => {
+      setExternalMana((current) => Math.max(0, current - 1));
+    }, forestExternalManaDrainMs);
+
+    return () => window.clearInterval(interval);
+  }, [isFullMapMenuOpen, isIntroLetterOpen, isLost, isManaRitualActive, isPaused, isWon]);
+
+  useEffect(() => {
+    if (!isFullMapMenuOpen || isPaused || isWon || isLost || isIntroLetterOpen) return;
+
+    const interval = window.setInterval(() => {
+      setExternalMana((current) => {
+        const nextMana = Math.max(0, current - 1);
+        if (nextMana === 0) closeFullMap();
+        return nextMana;
+      });
+    }, mapExternalManaDrainMs);
+
+    return () => window.clearInterval(interval);
+  }, [isFullMapMenuOpen, isIntroLetterOpen, isLost, isPaused, isWon]);
+
+  useEffect(() => {
     const handleMapKey = (event: KeyboardEvent) => {
       if (event.code !== "KeyM" || event.repeat || isIntroLetterOpen || isManaRitualActive || isWon) return;
 
       if (fullMapPhase === "closed") {
+        if (isExternalManaEmpty) return;
         fullMapTimeouts.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
         fullMapTimeouts.current = [];
         setFullMapPhase("closingIn");
@@ -861,11 +1016,11 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
 
     window.addEventListener("keydown", handleMapKey);
     return () => window.removeEventListener("keydown", handleMapKey);
-  }, [fullMapPhase, isIntroLetterOpen, isManaRitualActive, isWon]);
+  }, [fullMapPhase, isExternalManaEmpty, isIntroLetterOpen, isManaRitualActive, isWon]);
 
   return (
     <main
-      className={`forest-scene screen-fade forest-scene--${view}${turning ? ` forest-scene--turning forest-scene--turn-${turnMotion}` : ""}`}
+      className={`forest-scene screen-fade forest-scene--${view}${turning ? ` forest-scene--turning forest-scene--turn-${turnMotion}` : ""}${isExternalManaEmpty ? " forest-scene--no-external-mana" : ""}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -908,11 +1063,17 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
           <img src={iceDemonImage} alt="" draggable={false} />
         </div>
       )}
+      {shouldRenderDarkDemon && (
+        <div className={`forest-fire-demon forest-dark-demon${isDarkDemonLeaving ? " forest-fire-demon--leaving" : ""}`} aria-hidden="true">
+          <img src={darkDemonImage} alt="" draggable={false} />
+        </div>
+      )}
       <div className="first-person-vignette" />
+      {isExternalManaEmpty && <div className="external-mana-blackout" aria-hidden="true" />}
       {isSpellActive && activeSpell && (
         <div className={`fire-spell fire-spell--${activeSpell} fire-spell--${fireSpellPhase}${activeSpellHitsTarget ? " fire-spell--hit-target" : ""}`} aria-hidden="true">
           <img className="fire-spell__hands" src={spellHandsImage} alt="" draggable={false} />
-          {isSpellProjectileVisible && <span className={activeSpell === "fire" ? "fire-spell__orb" : "ice-spell__arrow"} />}
+          {isSpellProjectileVisible && <span className={activeSpell === "fire" ? "fire-spell__orb" : activeSpell === "ice" ? "ice-spell__arrow" : "light-spell__beam"} />}
         </div>
       )}
       {iceImpactKey > 0 && activeSpell === "ice" && fireSpellPhase === "shooting" && (
@@ -944,14 +1105,14 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
               <button
                 type="button"
                 className="mana-ritual__close"
-                aria-label="Выйти из накопления маны"
+                aria-label={text("closeMana")}
                 onTouchStart={closeMobileManaRitual}
                 onMouseDown={closeMobileManaRitual}
               >
                 <span aria-hidden="true" />
               </button>
               <div className="mana-ritual__mana">
-                <span>{manaRitualKind === "external" ? "Внешняя мана" : "Стихийная мана"}</span>
+                <span>{manaRitualKind === "external" ? text("externalMana") : text("elementalMana")}</span>
                 <strong>{manaRitualKind === "external" ? `${externalMana}/${maxExternalMana}` : `${playerMana}/${maxPlayerMana}`}</strong>
               </div>
               <div className={`mana-ritual__ring mana-ritual__ring--${manaRitualKind}`}>
@@ -968,23 +1129,23 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
                   <span className="mana-ritual__direction-icon" aria-hidden="true" />
                 </span>
               </div>
-              <div className="mana-ritual-controls" aria-label="Управление ритуалом">
+              <div className="mana-ritual-controls" aria-label={text("manaRitual")}>
                 <div className="mana-ritual-controls__side">
-                  <button type="button" className="mana-ritual-control mana-ritual-control--up" aria-label="Вверх" onPointerDown={(event) => pressMobileManaRitualLetter(event, "W")} onClick={(event) => pressMobileManaRitualLetter(event, "W")}>
+                  <button type="button" className="mana-ritual-control mana-ritual-control--up" aria-label={text("up")} onPointerDown={(event) => pressMobileManaRitualLetter(event, "W")} onClick={(event) => pressMobileManaRitualLetter(event, "W")}>
                     <span className="mana-ritual-control__icon" aria-hidden="true" />
                     <span className="mana-ritual-control__key">W</span>
                   </button>
-                  <button type="button" className="mana-ritual-control mana-ritual-control--down" aria-label="Вниз" onPointerDown={(event) => pressMobileManaRitualLetter(event, "S")} onClick={(event) => pressMobileManaRitualLetter(event, "S")}>
+                  <button type="button" className="mana-ritual-control mana-ritual-control--down" aria-label={text("down")} onPointerDown={(event) => pressMobileManaRitualLetter(event, "S")} onClick={(event) => pressMobileManaRitualLetter(event, "S")}>
                     <span className="mana-ritual-control__icon" aria-hidden="true" />
                     <span className="mana-ritual-control__key">S</span>
                   </button>
                 </div>
                 <div className="mana-ritual-controls__side">
-                  <button type="button" className="mana-ritual-control mana-ritual-control--left" aria-label="Влево" onPointerDown={(event) => pressMobileManaRitualLetter(event, "A")} onClick={(event) => pressMobileManaRitualLetter(event, "A")}>
+                  <button type="button" className="mana-ritual-control mana-ritual-control--left" aria-label={text("west")} onPointerDown={(event) => pressMobileManaRitualLetter(event, "A")} onClick={(event) => pressMobileManaRitualLetter(event, "A")}>
                     <span className="mana-ritual-control__icon" aria-hidden="true" />
                     <span className="mana-ritual-control__key">A</span>
                   </button>
-                  <button type="button" className="mana-ritual-control mana-ritual-control--right" aria-label="Вправо" onPointerDown={(event) => pressMobileManaRitualLetter(event, "D")} onClick={(event) => pressMobileManaRitualLetter(event, "D")}>
+                  <button type="button" className="mana-ritual-control mana-ritual-control--right" aria-label={text("right")} onPointerDown={(event) => pressMobileManaRitualLetter(event, "D")} onClick={(event) => pressMobileManaRitualLetter(event, "D")}>
                     <span className="mana-ritual-control__icon" aria-hidden="true" />
                     <span className="mana-ritual-control__key">D</span>
                   </button>
@@ -997,7 +1158,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
       <div className="health-hud" aria-label="Mana">
         <div className="forest-stat forest-stat--mana" aria-label={`Elemental mana ${playerMana} of ${maxPlayerMana}`}>
           <div className="forest-stat__top">
-            <span>Стихийная мана</span>
+            <span>{text("elementalMana")}</span>
             <strong>{playerMana}/{maxPlayerMana}</strong>
           </div>
           <div className="forest-stat__bar">
@@ -1006,7 +1167,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
         </div>
         <div className="forest-stat forest-stat--external-mana" aria-label={`External mana ${externalMana} of ${maxExternalMana}`}>
           <div className="forest-stat__top">
-            <span>Внешняя мана</span>
+            <span>{text("externalMana")}</span>
             <strong>{externalMana}/{maxExternalMana}</strong>
           </div>
           <div className="forest-stat__bar">
@@ -1014,7 +1175,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
           </div>
         </div>
       </div>
-      <div className="spell-buttons" aria-label="Заклинания">
+      <div className="spell-buttons" aria-label={text("actions")}>
         <button type="button" className="spell-button spell-button--fire" onPointerDown={(event) => pressMobileGameKey(event, "KeyJ", "j")}>
           <span className="spell-button__pixel spell-button__pixel--fire-one" />
           <span className="spell-button__pixel spell-button__pixel--fire-two" />
@@ -1022,8 +1183,8 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
           <span className="spell-button__pixel spell-button__pixel--fire-four" />
           <span className="spell-button__key">J</span>
           <span className="spell-button__content">
-            <span className="spell-button__title">Огненное заклинание</span>
-            <span className="spell-button__text">Тратит 10 очков стихийной маны</span>
+            <span className="spell-button__title">{text("fireSpell")}</span>
+            <span className="spell-button__text">{text("fireSpellCost")}</span>
           </span>
         </button>
         <button type="button" className="spell-button spell-button--ice" onPointerDown={(event) => pressMobileGameKey(event, "KeyK", "k")}>
@@ -1033,48 +1194,62 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
           <span className="spell-button__pixel spell-button__pixel--ice-four" />
           <span className="spell-button__key">K</span>
           <span className="spell-button__content">
-            <span className="spell-button__title">Ледяное заклинание</span>
-            <span className="spell-button__text">Тратит 15 очков стихийной маны</span>
+            <span className="spell-button__title">{text("iceSpell")}</span>
+            <span className="spell-button__text">{text("iceSpellCost")}</span>
           </span>
         </button>
+        {isDarkDemonNight && (
+          <button type="button" className="spell-button spell-button--light" onPointerDown={(event) => pressMobileGameKey(event, "KeyL", "l")}>
+            <span className="spell-button__key">L</span>
+            <span className="spell-button__content">
+              <span className="spell-button__title">{text("lightSpell")}</span>
+              <span className="spell-button__text">{text("lightSpellCost")}</span>
+            </span>
+          </button>
+        )}
       </div>
-      <div className="forest-key-buttons" aria-label="Действия">
+      <div className="forest-key-buttons" aria-label={text("actions")}>
         <button type="button" className="forest-key-button" onPointerDown={(event) => pressMobileGameKey(event, "KeyM", "m")}>
           <span className="spell-button__key">M</span>
           <span className="spell-button__content">
-            <span className="spell-button__title">Карта</span>
-            <span className="spell-button__text">Открывает карту леса</span>
+            <span className="spell-button__title">{text("map")}</span>
+            <span className="spell-button__text">{text("mapHint")}</span>
           </span>
         </button>
         <button type="button" className="forest-key-button" onPointerDown={(event) => pressMobileGameKey(event, "KeyE", "e")}>
           <span className="spell-button__key">E</span>
           <span className="spell-button__content">
-            <span className="spell-button__title">Стихийная мана</span>
-            <span className="spell-button__text">Ритуал стихийной маны</span>
+            <span className="spell-button__title">{text("elementalMana")}</span>
+            <span className="spell-button__text">{text("guideElementalMana")}</span>
           </span>
         </button>
         <button type="button" className="forest-key-button" onPointerDown={(event) => pressMobileGameKey(event, "KeyQ", "q")}>
           <span className="spell-button__key">Q</span>
           <span className="spell-button__content">
-            <span className="spell-button__title">Внешняя мана</span>
-            <span className="spell-button__text">Ритуал внешней маны</span>
+            <span className="spell-button__title">{text("externalMana")}</span>
+            <span className="spell-button__text">{text("guideExternalMana")}</span>
           </span>
         </button>
       </div>
-      <div className="forest-mobile-controls" aria-label="Мобильное управление">
-        <button type="button" className="forest-mobile-control forest-mobile-control--fire" aria-label="Огонь" onTouchStart={(event) => pressMobileGameKey(event, "KeyJ", "j")} onMouseDown={(event) => pressMobileGameKey(event, "KeyJ", "j")}>
+      <div className="forest-mobile-controls" aria-label={text("mobileControls")}>
+        <button type="button" className="forest-mobile-control forest-mobile-control--fire" aria-label={text("fire")} onTouchStart={(event) => pressMobileGameKey(event, "KeyJ", "j")} onMouseDown={(event) => pressMobileGameKey(event, "KeyJ", "j")}>
           <span className="mobile-forest-icon mobile-forest-icon--fire" aria-hidden="true" />
         </button>
-        <button type="button" className="forest-mobile-control forest-mobile-control--ice" aria-label="Лед" onTouchStart={(event) => pressMobileGameKey(event, "KeyK", "k")} onMouseDown={(event) => pressMobileGameKey(event, "KeyK", "k")}>
+        <button type="button" className="forest-mobile-control forest-mobile-control--ice" aria-label={text("ice")} onTouchStart={(event) => pressMobileGameKey(event, "KeyK", "k")} onMouseDown={(event) => pressMobileGameKey(event, "KeyK", "k")}>
           <span className="mobile-forest-icon mobile-forest-icon--ice" aria-hidden="true" />
         </button>
-        <button type="button" className="forest-mobile-control forest-mobile-control--map" aria-label="Карта" onTouchStart={(event) => pressMobileGameKey(event, "KeyM", "m")} onMouseDown={(event) => pressMobileGameKey(event, "KeyM", "m")}>
+        {isDarkDemonNight && (
+          <button type="button" className="forest-mobile-control forest-mobile-control--light" aria-label={text("light")} onTouchStart={(event) => pressMobileGameKey(event, "KeyL", "l")} onMouseDown={(event) => pressMobileGameKey(event, "KeyL", "l")}>
+            <span className="mobile-forest-icon mobile-forest-icon--light" aria-hidden="true" />
+          </button>
+        )}
+        <button type="button" className="forest-mobile-control forest-mobile-control--map" aria-label={text("map")} onTouchStart={(event) => pressMobileGameKey(event, "KeyM", "m")} onMouseDown={(event) => pressMobileGameKey(event, "KeyM", "m")}>
           <span className="mobile-forest-icon mobile-forest-icon--map" aria-hidden="true" />
         </button>
-        <button type="button" className="forest-mobile-control forest-mobile-control--mana" aria-label="Стихийная мана" onTouchStart={(event) => pressMobileGameKey(event, "KeyE", "e")} onMouseDown={(event) => pressMobileGameKey(event, "KeyE", "e")}>
+        <button type="button" className="forest-mobile-control forest-mobile-control--mana" aria-label={text("elementalMana")} onTouchStart={(event) => pressMobileGameKey(event, "KeyE", "e")} onMouseDown={(event) => pressMobileGameKey(event, "KeyE", "e")}>
           <span className="mobile-forest-icon mobile-forest-icon--mana" aria-hidden="true" />
         </button>
-        <button type="button" className="forest-mobile-control forest-mobile-control--external" aria-label="Внешняя мана" onTouchStart={(event) => pressMobileGameKey(event, "KeyQ", "q")} onMouseDown={(event) => pressMobileGameKey(event, "KeyQ", "q")}>
+        <button type="button" className="forest-mobile-control forest-mobile-control--external" aria-label={text("externalMana")} onTouchStart={(event) => pressMobileGameKey(event, "KeyQ", "q")} onMouseDown={(event) => pressMobileGameKey(event, "KeyQ", "q")}>
           <span className="mobile-forest-icon mobile-forest-icon--external" aria-hidden="true" />
         </button>
       </div>
@@ -1092,14 +1267,14 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
         <div className={`full-map-overlay full-map-overlay--${fullMapPhase}`}>
           {fullMapPhase === "open" && (
             <>
-              <button type="button" className="overlay-close-button" aria-label="Закрыть карту" onTouchStart={(event) => closeOverlayButton(event, closeFullMap)} onMouseDown={(event) => closeOverlayButton(event, closeFullMap)}>
+              <button type="button" className="overlay-close-button" aria-label={text("closeMap")} onTouchStart={(event) => closeOverlayButton(event, closeFullMap)} onMouseDown={(event) => closeOverlayButton(event, closeFullMap)}>
                 <span aria-hidden="true" />
               </button>
               <section className="full-forest-map" aria-hidden="true">
-                <span className="full-map-label full-map-label--north">Север</span>
-                <span className="full-map-label full-map-label--east">Восток</span>
-                <span className="full-map-label full-map-label--south">Юг</span>
-                <span className="full-map-label full-map-label--west">Запад</span>
+                <span className="full-map-label full-map-label--north">{text("north")}</span>
+                <span className="full-map-label full-map-label--east">{text("east")}</span>
+                <span className="full-map-label full-map-label--south">{text("south")}</span>
+                <span className="full-map-label full-map-label--west">{text("west")}</span>
                 <span className="full-map-road full-map-road--vertical" />
                 <span className="full-map-road full-map-road--horizontal" />
                 <span className="full-map-edge full-map-edge--top" />
@@ -1117,6 +1292,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
                 <span className="full-map-corner full-map-corner--south-east" />
                 {isFireDemonNight && <span className={`full-map-red-demon full-map-red-demon--${fireDemonNode}${isFireDemonMoving ? " full-map-red-demon--moving" : ""}`} />}
                 {isFireDemonNight && <span className={`full-map-red-demon full-map-ice-demon full-map-red-demon--${iceDemonNode}${isIceDemonMoving ? " full-map-red-demon--moving" : ""}`} />}
+                {isDarkDemonNight && darkDemonNode && <span className={`full-map-red-demon full-map-dark-demon full-map-red-demon--${darkDemonNode}${isDarkDemonMoving ? " full-map-red-demon--moving" : ""}`} />}
                 <span className={`full-map-player full-map-player--${place}`} />
               </section>
             </>
@@ -1165,20 +1341,12 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
       {isIntroLetterOpen && (
         <div className={`night-letter-overlay${isIntroLetterClosing ? " night-letter-overlay--closing" : ""}`}>
           <section className={`night-letter-page${isIntroLetterClosing ? " night-letter-page--closing" : ""}`}>
-            <p>
-              Здравствуйте! Если вы читаете это письмо,<br />
-              значит, вы согласны с условиями нашей работы.<br />
-              В лесу есть демоны, и вы должны не дать им<br />
-              добраться до энергетического ядра леса:<br />
-              их привлекает его излучение.<br />
-              Адрес, где вы можете забрать деньги:<br />
-              улица Пушкина, дом 5, квартира 15.
-            </p>
-            <p>Надеюсь, вы сможете защитить ядро.</p>
+            <p>{text("introLetterBody")}</p>
+            <p>{text("introLetterSignoff")}</p>
             <button
               type="button"
               className="night-letter-arrow"
-              aria-label="Продолжить"
+              aria-label={text("continue")}
               onClick={() => {
                 if (isIntroLetterClosing) return;
 
@@ -1196,7 +1364,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
       {isPaused && (
         <div className="night-pause">
           <section className="night-pause-panel">
-            <button type="button" className="overlay-close-button overlay-close-button--panel" aria-label="Закрыть меню" onClick={() => setIsPaused(false)}>
+            <button type="button" className="overlay-close-button overlay-close-button--panel" aria-label={text("closeMenu")} onClick={() => setIsPaused(false)}>
               <span aria-hidden="true" />
             </button>
             <h2>{text("pause")}</h2>
@@ -1207,7 +1375,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
               </button>
             </label>
             <label>
-              <span>{save.language === "ru" ? "Общая громкость" : "Master volume"}</span>
+              <span>{text("masterVolume")}</span>
               <input type="range" min="0" max="1" step="0.05" value={save.volume} onChange={(event) => setSave({ ...save, volume: Number(event.target.value) })} />
             </label>
             <label>
@@ -1219,7 +1387,7 @@ export function NightForestScene({ onBack, save, setSave, night, initialWon = fa
               <input type="range" min="0" max="1" step="0.05" value={save.effects} onChange={(event) => setSave({ ...save, effects: Number(event.target.value) })} />
             </label>
             <button type="button" onClick={() => { setNightHour(6); setIsPaused(false); setIsWon(true); }}>
-              Победа
+              {text("victory")}
             </button>
             <button type="button" onClick={() => setIsPaused(false)}>{text("resume")}</button>
             <button type="button" className="secondary" onClick={onBack}>{text("mainMenu")}</button>

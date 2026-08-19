@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, type PointerEvent } from "react";
 
 export type ControlCode = "ArrowLeft" | "ArrowRight" | "ArrowUp" | "Space" | "ShiftLeft";
 
@@ -6,116 +6,90 @@ type MobileGameControlsProps = {
   onControl: (code: ControlCode, active: boolean) => void;
 };
 
-export function MobileGameControls({ onControl }: MobileGameControlsProps) {
-  const activeTouches = useRef(new Set<ControlCode>());
-
-  const releaseAll = () => {
-    for (const code of controlCodes) {
-      onControl(code, false);
-    }
-    activeTouches.current.clear();
-  };
-
-  const syncTouches = (touches: React.TouchList) => {
-    const next = getTouchCodes(touches);
-    for (const code of controlCodes) {
-      const active = next.has(code);
-      if (activeTouches.current.has(code) !== active) {
-        onControl(code, active);
-      }
-    }
-    activeTouches.current = next;
-  };
-
-  return (
-    <div
-      className="mobile-controls"
-      aria-label="Управление"
-      onTouchStart={(event) => {
-        event.preventDefault();
-        syncTouches(event.touches);
-      }}
-      onTouchMove={(event) => {
-        event.preventDefault();
-        syncTouches(event.touches);
-      }}
-      onTouchEnd={(event) => {
-        event.preventDefault();
-        syncTouches(event.touches);
-      }}
-      onTouchCancel={releaseAll}
-    >
-      <div className="mobile-controls__move">
-        <ControlButton label="Влево" icon="left" code="ArrowLeft" kind="move" onControl={onControl} />
-        <ControlButton label="Вправо" icon="right" code="ArrowRight" kind="move" onControl={onControl} />
-      </div>
-      <div className="mobile-controls__actions">
-        <ControlButton label="Вверх" icon="up" code="ArrowUp" kind="small" onControl={onControl} />
-        <ControlButton label="Прыжок" icon="jump" code="Space" kind="jump" onControl={onControl} />
-        <ControlButton label="Рывок" icon="dash" code="ShiftLeft" kind="small" onControl={onControl} />
-      </div>
-    </div>
-  );
-}
-
-const controlCodes: ControlCode[] = ["ArrowLeft", "ArrowRight", "ArrowUp", "Space", "ShiftLeft"];
-
-type ControlButtonProps = {
-  label: string;
-  icon: "left" | "right" | "up" | "jump" | "dash";
-  code: ControlCode;
-  kind: "move" | "jump" | "small";
-  onControl: (code: ControlCode, active: boolean) => void;
+type StickState = {
+  x: number;
+  y: number;
+  active: boolean;
 };
 
-function ControlButton({ label, icon, code, kind, onControl }: ControlButtonProps) {
-  const press = (event: { preventDefault: () => void; stopPropagation: () => void }) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onControl(code, true);
+const joystickCodes: ControlCode[] = ["ArrowLeft", "ArrowRight", "ArrowUp"];
+const stickLimit = 34;
+const deadZone = 14;
+
+export function MobileGameControls({ onControl }: MobileGameControlsProps) {
+  const stickRef = useRef<HTMLButtonElement | null>(null);
+  const [stick, setStick] = useState<StickState>({ x: 0, y: 0, active: false });
+
+  const releaseJoystick = (event?: PointerEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
+    for (const code of joystickCodes) onControl(code, false);
+    setStick({ x: 0, y: 0, active: false });
   };
 
-  const release = (event?: { preventDefault: () => void; stopPropagation: () => void }) => {
+  const moveJoystick = (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    const rect = stickRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const rawX = event.clientX - centerX;
+    const rawY = event.clientY - centerY;
+    const distance = Math.hypot(rawX, rawY);
+    const scale = distance > stickLimit ? stickLimit / distance : 1;
+    const x = rawX * scale;
+    const y = rawY * scale;
+
+    onControl("ArrowLeft", x < -deadZone);
+    onControl("ArrowRight", x > deadZone);
+    onControl("ArrowUp", y < -deadZone);
+    setStick({ x, y, active: true });
+  };
+
+  const pressJump = (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    onControl("Space", true);
+  };
+
+  const releaseJump = (event?: PointerEvent<HTMLButtonElement>) => {
     event?.preventDefault();
-    event?.stopPropagation();
-    onControl(code, false);
+    onControl("Space", false);
   };
 
   return (
-    <button
-      type="button"
-      className={`mobile-control-button mobile-control-button--${kind}`}
-      data-control-code={code}
-      aria-label={label}
-      onPointerDown={press}
-      onPointerUp={release}
-      onPointerCancel={release}
-      onPointerLeave={release}
-      onMouseDown={press}
-      onMouseUp={release}
-      onMouseLeave={() => release()}
-      onContextMenu={(event) => event.preventDefault()}
-    >
-      <span className={`mobile-control-icon mobile-control-icon--${icon}`} aria-hidden="true" />
-    </button>
+    <div className="mobile-controls" aria-label="Управление">
+      <button
+        type="button"
+        className={`mobile-joystick${stick.active ? " mobile-joystick--active" : ""}`}
+        aria-label="Движение"
+        ref={stickRef}
+        onPointerDown={moveJoystick}
+        onPointerMove={moveJoystick}
+        onPointerUp={releaseJoystick}
+        onPointerCancel={releaseJoystick}
+        onLostPointerCapture={() => releaseJoystick()}
+        onContextMenu={(event) => event.preventDefault()}
+      >
+        <span className="mobile-joystick__mark mobile-joystick__mark--left" />
+        <span className="mobile-joystick__mark mobile-joystick__mark--right" />
+        <span className="mobile-joystick__mark mobile-joystick__mark--up" />
+        <span className="mobile-joystick__thumb" style={{ transform: `translate(${stick.x}px, ${stick.y}px)` }} />
+      </button>
+      <button
+        type="button"
+        className="mobile-jump-button"
+        aria-label="Прыжок"
+        onPointerDown={pressJump}
+        onPointerUp={releaseJump}
+        onPointerCancel={releaseJump}
+        onLostPointerCapture={() => releaseJump()}
+        onContextMenu={(event) => event.preventDefault()}
+      >
+        <span className="mobile-control-icon mobile-control-icon--jump" aria-hidden="true" />
+      </button>
+    </div>
   );
-}
-
-function getTouchCodes(touches: React.TouchList) {
-  const codes = new Set<ControlCode>();
-  for (let index = 0; index < touches.length; index += 1) {
-    const touch = touches.item(index);
-    if (!touch) continue;
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    const button = element?.closest<HTMLButtonElement>("[data-control-code]");
-    const code = button?.dataset.controlCode;
-    if (isControlCode(code)) {
-      codes.add(code);
-    }
-  }
-  return codes;
-}
-
-function isControlCode(code: string | undefined): code is ControlCode {
-  return controlCodes.includes(code as ControlCode);
 }
